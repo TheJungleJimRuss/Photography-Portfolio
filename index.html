@@ -43,11 +43,11 @@
 
         <!-- Section Navigation Tabs -->
         <div class="nav-group nav-group-right">
-          <a href="index.html" class="nav-item nav-link active" id="nav-portfolio">Portfolio</a>
+          <a href="#hero" class="nav-item nav-link" id="nav-portfolio">Portfolio</a>
           <span class="nav-sep" aria-hidden="true">·</span>
-          <a href="about.html" class="nav-item nav-link" id="nav-about">About</a>
+          <a href="#about" class="nav-item nav-link" id="nav-about">About</a>
           <span class="nav-sep" aria-hidden="true">·</span>
-          <a href="contact.html" class="nav-item nav-link" id="nav-contact">Contact</a>
+          <a href="#contact" class="nav-item nav-link" id="nav-contact">Contact</a>
         </div>
       </nav>
     </header>
@@ -63,7 +63,7 @@
           <img
             src="images/editorial_fashion.jpg"
             alt="Commercial Editorial Portfolio"
-            class="hero-photo photo-commercial"
+            class="hero-photo photo-commercial is-active"
           />
           <img
             src="images/wedding_ephrussi.jpg"
@@ -304,14 +304,181 @@
         }
       }
 
+      // 2b. BUTTERY SLAT CURTAIN TRANSITION
+      // The outgoing frame drifts back while the incoming one is sliced into
+      // vertical slats that glide in — alternating up/down, staggered toward
+      // whichever tab you pressed — under a soft scale + blur bloom. Because
+      // every slat carries the full-bleed frame offset into its own column,
+      // the photograph re-assembles itself with no visible seams.
+      const heroStack = document.querySelector('.hero-photo-stack');
+      const heroPhotos = { commercial: photoCommercial, weddings: photoWeddings };
+
+      const SLAT_DURATION = 980;   // travel time of a single slat
+      const SLAT_STAGGER = 58;     // offset between neighbouring slats
+      const SLAT_EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const supportsWAAPI = typeof Element !== 'undefined' && !!Element.prototype.animate;
+
+      // Hand the stylesheet control of the photographs only once the script is
+      // actually running. Until this lands, the plain data-mode dissolve holds,
+      // so the hero is never blank if this file and style.css get out of step.
+      if (heroStack) heroStack.classList.add('curtain-ready');
+
+      let slatLayer = null;          // the live curtain, if one is running
+      let slatAnimations = [];       // every animation belonging to that curtain
+      let slatSettle = null;         // callback that lands the transition early
+      let slatRelayout = null;       // re-measures the curtain on resize
+
+      function slatCount() {
+        const w = window.innerWidth;
+        if (w < 640) return 4;
+        if (w < 1100) return 5;
+        return 6;
+      }
+
+      // Land whatever curtain is mid-flight instantly (fast repeated clicks,
+      // or a mode change arriving before the previous one finished).
+      function settleCurtain() {
+        if (slatSettle) slatSettle();
+      }
+
+      function swapBasePhoto(mode) {
+        Object.keys(heroPhotos).forEach(key => {
+          const img = heroPhotos[key];
+          if (!img) return;
+          img.classList.toggle('is-active', key === mode);
+          img.style.transform = '';
+          img.style.filter = '';
+        });
+      }
+
+      function runSlatCurtain(fromMode, toMode) {
+        const incoming = heroPhotos[toMode];
+        const outgoing = heroPhotos[fromMode];
+        if (!heroStack || !incoming) {
+          swapBasePhoto(toMode);
+          return;
+        }
+
+        const source = incoming.currentSrc || incoming.src;
+        const count = slatCount();
+        // Reveal sweeps toward the tab that was pressed: Commercial sits on the
+        // left of the navbar, Weddings on the right.
+        const sweepRight = toMode === 'weddings';
+        const total = SLAT_DURATION + SLAT_STAGGER * (count - 1);
+
+        const layer = document.createElement('div');
+        layer.className = 'hero-slats';
+        layer.setAttribute('aria-hidden', 'true');
+
+        const slats = [];
+        for (let i = 0; i < count; i++) {
+          const slat = document.createElement('div');
+          slat.className = 'hero-slat';
+          const inner = document.createElement('div');
+          inner.className = 'hero-slat-inner';
+          inner.style.backgroundImage = `url("${source}")`;
+          slat.appendChild(inner);
+          layer.appendChild(slat);
+          slats.push({ slat, inner });
+        }
+
+        // Integer edges tile the viewport exactly — no hairline gaps, no overlap.
+        function layoutSlats() {
+          const width = heroStack.clientWidth || window.innerWidth;
+          for (let i = 0; i < count; i++) {
+            const left = Math.round((i * width) / count);
+            const right = Math.round(((i + 1) * width) / count);
+            const { slat, inner } = slats[i];
+            slat.style.left = left + 'px';
+            slat.style.width = (right - left) + 'px';
+            inner.style.left = -left + 'px';
+            inner.style.width = width + 'px';
+          }
+        }
+
+        layoutSlats();
+        heroStack.appendChild(layer);
+
+        slatLayer = layer;
+        slatRelayout = layoutSlats;
+        slatAnimations = [];
+
+        // Everything below animates transform and opacity ONLY. Both are handled
+        // on the compositor, so cost does not grow with screen size — which
+        // matters here, where each slat carries a full-viewport image.
+        slats.forEach(({ slat, inner }, i) => {
+          const order = sweepRight ? i : count - 1 - i;
+          const delay = order * SLAT_STAGGER;
+          const fromY = i % 2 === 0 ? '-102%' : '102%';
+
+          // Travel plus a slight settle out of scale, in one transform.
+          slatAnimations.push(inner.animate([
+            { transform: `translate3d(0, ${fromY}, 0) scale(1.06)` },
+            { transform: 'translate3d(0, 0, 0) scale(1)' }
+          ], { duration: SLAT_DURATION, delay, easing: SLAT_EASE, fill: 'both' }));
+
+          // Each slat materialises as it travels, which softens the leading
+          // edge the way the old blur did but for free.
+          slatAnimations.push(slat.animate([
+            { opacity: 0 },
+            { opacity: 1 }
+          ], { duration: SLAT_DURATION * 0.45, delay, easing: 'cubic-bezier(0.33, 0.9, 0.4, 1)', fill: 'both' }));
+        });
+
+        // The frame being replaced drifts gently back as it leaves.
+        if (outgoing) {
+          slatAnimations.push(outgoing.animate([
+            { transform: 'scale(1)' },
+            { transform: 'scale(1.06)' }
+          ], { duration: total, easing: SLAT_EASE, fill: 'both' }));
+        }
+
+        let landed = false;
+        const land = () => {
+          if (landed) return;
+          landed = true;
+          clearTimeout(timer);
+          slatAnimations.forEach(anim => anim.cancel());
+          slatAnimations = [];
+          // At rest the curtain is pixel-identical to the incoming photograph,
+          // so handing over to the base layer is invisible.
+          swapBasePhoto(toMode);
+          if (layer.parentNode) layer.parentNode.removeChild(layer);
+          if (slatLayer === layer) {
+            slatLayer = null;
+            slatSettle = null;
+            slatRelayout = null;
+          }
+        };
+
+        slatSettle = land;
+        // Timer rather than the animation's finished promise: it still fires if
+        // the tab is backgrounded mid-transition, so we never strand the curtain.
+        const timer = setTimeout(land, total + 40);
+      }
+
       function setMode(mode) {
         if (body.getAttribute('data-mode') === mode) return;
+
+        const previous = body.getAttribute('data-mode') || 'commercial';
 
         body.setAttribute('data-mode', mode);
 
         toggleButtons.forEach(btn => {
           btn.classList.toggle('active', btn.dataset.target === mode);
         });
+
+        settleCurtain();
+
+        // Skip the choreography when it cannot be seen or is not wanted.
+        const heroOffscreen = window.scrollY > window.innerHeight * 0.9;
+        if (!supportsWAAPI || reducedMotion.matches || heroOffscreen) {
+          swapBasePhoto(mode);
+        } else {
+          runSlatCurtain(previous, mode);
+        }
 
         updateNavbarContrast();
       }
@@ -322,12 +489,34 @@
         });
       });
 
-      // 3. SMOOTH NAVIGATION (Portfolio scrolls to top when already on home page)
+      // 3. SMOOTH NAVIGATION (Portfolio scrolls to top; About & Contact scroll to section)
       const navPortfolio = document.getElementById('nav-portfolio');
       if (navPortfolio) {
         navPortfolio.addEventListener('click', (e) => {
           e.preventDefault();
           window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+
+      const navAbout = document.getElementById('nav-about');
+      if (navAbout) {
+        navAbout.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = document.getElementById('about') || document.getElementById('contact');
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+
+      const navContact = document.getElementById('nav-contact');
+      if (navContact) {
+        navContact.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = document.getElementById('contact');
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+          }
         });
       }
 
@@ -367,6 +556,8 @@
       window.addEventListener('resize', () => {
         onScroll();
         updateNavbarContrast();
+        // Keep a mid-flight curtain tiled to the new viewport width.
+        if (slatRelayout) slatRelayout();
       });
       window.addEventListener('load', () => {
         window.scrollTo(0, 0);
