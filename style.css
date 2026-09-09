@@ -365,38 +365,67 @@ body[data-mode="weddings"] .mode-text-weddings {
   grid-template-areas: "stack";
 }
 
-.hero-photo-stack > * {
+.hero-photo-stack > .hero-photo {
   grid-area: stack;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  transition: opacity 0.75s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
+  transform-origin: center center;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
 }
 
-body[data-mode="commercial"] .hero-photo-stack .photo-commercial {
+/* The base layer only ever shows the mode that is currently "landed".
+   The incoming photograph arrives through the slat curtain below. */
+.hero-photo.is-active {
   opacity: 1;
-  transform: scale(1);
   pointer-events: auto;
 }
 
-body[data-mode="commercial"] .hero-photo-stack .photo-weddings {
-  opacity: 0;
-  transform: scale(1.04);
+/* --------------------------------------------------------------------------
+   BUTTERY SLAT CURTAIN
+   The incoming photograph is sliced into vertical slats. Each slat carries the
+   full-bleed frame offset into place, so as they glide in (alternating up and
+   down, staggered toward the tab you picked) the picture re-assembles itself
+   seamlessly. The whole curtain settles out of a soft scale + blur bloom.
+   -------------------------------------------------------------------------- */
+.hero-slats {
+  grid-area: stack;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
   pointer-events: none;
+  transform-origin: center center;
+  will-change: transform, filter;
 }
 
-body[data-mode="weddings"] .hero-photo-stack .photo-commercial {
-  opacity: 0;
-  transform: scale(1.04);
-  pointer-events: none;
+.hero-slat {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  overflow: hidden;
+  backface-visibility: hidden;
 }
 
-body[data-mode="weddings"] .hero-photo-stack .photo-weddings {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
+.hero-slat-inner {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Motion-sensitive visitors get the quiet dissolve instead. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo-stack > .hero-photo {
+    transition: opacity 0.5s ease;
+  }
 }
 
 /* Hero Title Box: Dual-Wipe Typography & Strictly Columnar Layout */
