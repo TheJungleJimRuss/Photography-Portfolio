@@ -4,38 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="no-referrer" />
-    <meta name="description" content="About — Remix Glow Creative Co" />
-    <meta property="og:title" content="About — Remix Glow Creative Co" />
-    <meta property="og:description" content="About — Remix Glow Creative Co" />
-    <title>About — Remix Glow Creative Co</title>
+    <meta name="description" content="About Glow Creative Co. — Studio philosophy, directors, and production practice." />
+    <title>About — Glow Creative Co</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css" />
-    <script>
-      // Apply persisted dual-world mode immediately to prevent flash
-      (function() {
-        const savedMode = localStorage.getItem('glow_studio_mode') || 'commercial';
-        document.documentElement.setAttribute('data-mode', savedMode);
-      })();
-    </script>
   </head>
-  <body data-mode="commercial">
+  <body class="subpage">
 
     <!-- ===================================================================
-         STUDIO MINIMAL NAVBAR
+         STUDIO MINIMAL NAVBAR (WITHOUT COMMERCIAL/WEDDINGS TOGGLE)
          =================================================================== -->
-    <header class="site-header scrolled" id="site-header">
+    <header class="site-header solid" id="site-header">
       <nav class="site-nav" aria-label="Main Navigation">
-        <!-- Dual World Mode Switcher Tabs -->
+        <!-- Brand Link -->
         <div class="nav-group nav-group-left">
-          <button type="button" class="nav-item toggle-btn active" data-target="commercial" id="btn-mode-commercial">
-            Commercial
-          </button>
-          <span class="nav-sep" aria-hidden="true">/</span>
-          <button type="button" class="nav-item toggle-btn" data-target="weddings" id="btn-mode-weddings">
-            Weddings
-          </button>
+          <a href="index.html" class="nav-item nav-brand" id="brand-link">GLOW CREATIVE CO.</a>
         </div>
 
         <!-- Section Navigation Tabs -->
@@ -50,46 +35,25 @@
     </header>
 
     <!-- ===================================================================
-         BASIC ABOUT PAGE
+         BLANK ABOUT PAGE SKELETON
          =================================================================== -->
-    <main class="page-view" id="view-about">
-      <div class="page-shell">
-        <header class="page-hero" style="border-bottom: none;">
-          <div class="page-headline-wrap">
-            <h1 class="page-headline-commercial mode-text-commercial">
-              ABOUT
-            </h1>
-            <h1 class="page-headline-weddings mode-text-weddings" aria-hidden="true">
-              About
-            </h1>
-          </div>
+    <div class="subpage-container" id="about-container">
+      <main class="subpage-main" id="about-main">
+        <header class="subpage-header" id="about-header">
+          <h1 class="subpage-title" id="about-title">About</h1>
+          <p class="subpage-subtitle">Studio Philosophy & Practice</p>
         </header>
-      </div>
-    </main>
 
-    <script>
-      const body = document.body;
-      const toggleButtons = document.querySelectorAll('.toggle-btn');
-      const siteHeader = document.getElementById('site-header');
+        <!-- Blank wireframe container ready for content -->
+        <div class="blank-frame" id="about-content-box">
+          <span>About Content Area</span>
+        </div>
+      </main>
 
-      function setMode(mode) {
-        body.setAttribute('data-mode', mode);
-        document.documentElement.setAttribute('data-mode', mode);
-        localStorage.setItem('glow_studio_mode', mode);
+      <footer class="subpage-footer" id="about-footer">
+        <p>Glow Creative Co. — Commercial Photography & Film</p>
+      </footer>
+    </div>
 
-        toggleButtons.forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.target === mode);
-        });
-      }
-
-      const savedMode = localStorage.getItem('glow_studio_mode') || 'commercial';
-      setMode(savedMode);
-
-      toggleButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          setMode(btn.dataset.target);
-        });
-      });
-    </script>
   </body>
 </html>
