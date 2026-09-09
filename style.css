@@ -1,7 +1,674 @@
-.sktn{
-  background-color: #808080;
+/* ==========================================================================
+   SITE SKELETON STYLES: DUAL-WORLD (COMMERCIAL / WEDDINGS)
+   Seamless cross-fades, sliding toggle pill, and scroll effects
+   ========================================================================== */
+
+/* Basic Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
-.MnName{
-  font-size: 120px;
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 64px;
+}
+
+/* ==========================================================================
+   ATMOSPHERIC THEMES (CSS VARIABLES)
+   ========================================================================== */
+:root {
+  --font-commercial: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-weddings: 'Cormorant Garamond', Georgia, serif;
+}
+
+/* COMMERCIAL MODE (Crisp, architectural modern neutrals) */
+body[data-mode="commercial"] {
+  --bg-page: #fbfbfb;
+  --bg-box: #e5e5e5;
+  --text-main: #141414;
+  --text-muted: #666666;
+  --border-subtle: #d0d0d0;
+  --border-dashed: #a3a3a3;
+  --nav-bg: rgba(251, 251, 251, 0.9);
+  --nav-border: rgba(215, 215, 215, 0.75);
+}
+
+/* WEDDINGS MODE (Warm, romantic alabaster, linen & taupe tones) */
+body[data-mode="weddings"] {
+  --bg-page: #FAF6F0;           /* Warm creamy alabaster */
+  --bg-box: #F0E8DC;            /* Soft warm linen */
+  --text-main: #2C241E;         /* Warm deep espresso */
+  --text-muted: #827364;        /* Soft taupe */
+  --border-subtle: #E2D7C7;     /* Warm linen border */
+  --border-dashed: #C6B59F;     /* Warm bronze dashed */
+  --nav-bg: rgba(250, 246, 240, 0.9);
+  --nav-border: rgba(226, 215, 199, 0.78);
+}
+
+/* Base Body Styles */
+body {
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  font-family: var(--font-commercial);
+  overflow-x: hidden;
+  transition: background-color 0.6s ease, color 0.6s ease;
+}
+
+/* ==========================================================================
+   SEAMLESS CROSS-FADE GRID STACK
+   Renders both variants in the exact same coordinates.
+   Dissolves smoothly via opacity, transform, and soft optical blur.
+   ========================================================================== */
+.mode-crossfade-stack {
+  display: inline-grid;
+  grid-template-areas: "stack";
+  align-items: center;
+  justify-items: center;
+  position: relative;
+}
+
+.mode-crossfade-stack > * {
+  grid-area: stack;
+  transition: opacity 0.55s ease,
+              transform 0.55s ease,
+              filter 0.5s ease;
+  will-change: opacity, transform, filter;
+  white-space: nowrap;
+}
+
+/* In Commercial Mode */
+body[data-mode="commercial"] .mode-text-commercial {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0px);
+  pointer-events: auto;
+}
+
+body[data-mode="commercial"] .mode-text-weddings {
+  opacity: 0;
+  transform: translateY(6px);
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+/* In Weddings Mode */
+body[data-mode="weddings"] .mode-text-commercial {
+  opacity: 0;
+  transform: translateY(-6px);
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+body[data-mode="weddings"] .mode-text-weddings {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0px);
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   MINIMAL ARCHITECTURAL NAVBAR
+   Completely transparent at page top with zero blur (leaving photos 100% untouched).
+   Automatically detects underlying image luminance:
+   - Light text when over dark backgrounds
+   - Dark text when over light backgrounds
+   Frosted solid backdrop smoothly appears as you scroll down.
+   ========================================================================== */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 52px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  border-bottom: 1px solid transparent;
+  box-shadow: none;
+  pointer-events: none;
+  transition: background-color 0.35s ease, backdrop-filter 0.35s ease, -webkit-backdrop-filter 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+}
+
+.site-header.scrolled {
+  background-color: var(--nav-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--nav-border);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.04);
+}
+
+.site-nav {
+  pointer-events: auto;
+  width: 100%;
+  padding: 0 clamp(1.25rem, 4vw, 3.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+/* Base button and link style: quiet, refined luxury typography */
+.nav-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  text-decoration: none;
+  font-family: var(--font-commercial);
+  font-size: 0.74rem;
+  font-weight: 550;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-main);
+  opacity: 0.85;
+  padding: 0.35rem 0.15rem;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1;
+  transition: color 0.35s ease, opacity 0.25s ease;
+  user-select: none;
+}
+
+.nav-item:hover {
+  opacity: 1;
+}
+
+/* Dual-World Mode Switcher Tabs: crisp geometric underline for active mode */
+.nav-item.toggle-btn.active {
+  color: var(--text-main);
+  opacity: 1;
+  font-weight: 700;
+}
+
+.nav-item.toggle-btn::after {
+  content: '';
+  position: absolute;
+  bottom: -2.5px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--text-main);
+  opacity: 0;
+  transform: scaleX(0.6);
+  transition: opacity 0.25s ease, transform 0.25s ease, background-color 0.35s ease;
+}
+
+.nav-item.toggle-btn.active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+/* Subtle separator between tabs */
+.nav-sep {
+  display: inline-block;
+  color: var(--text-main);
+  font-size: 0.75rem;
+  line-height: 1;
+  user-select: none;
+  opacity: 0.4;
+  transition: color 0.35s ease, opacity 0.35s ease;
+}
+
+/* ==========================================================================
+   ADAPTIVE CONTRAST: AUTOMATIC LIGHT / DARK TEXT AT TOP OF PAGE
+   Triggered dynamically by background image luminance.
+   When scrolled, the navbar background takes over and returns to standard theme.
+   ========================================================================== */
+
+/* Over DARK background -> Crisp LIGHT/WHITE text */
+.site-header:not(.scrolled) .nav-group[data-tone="light"] .nav-item,
+.site-header:not(.scrolled)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item {
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+.site-header:not(.scrolled) .nav-group[data-tone="light"] .nav-item:hover,
+.site-header:not(.scrolled)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item:hover {
+  opacity: 1;
+}
+
+.site-header:not(.scrolled) .nav-group[data-tone="light"] .nav-item.toggle-btn.active,
+.site-header:not(.scrolled)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item.toggle-btn.active {
+  color: #ffffff;
+  opacity: 1;
+}
+
+.site-header:not(.scrolled) .nav-group[data-tone="light"] .nav-item.toggle-btn::after,
+.site-header:not(.scrolled)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item.toggle-btn::after {
+  background-color: #ffffff;
+}
+
+.site-header:not(.scrolled) .nav-group[data-tone="light"] .nav-sep,
+.site-header:not(.scrolled)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-sep {
+  color: #ffffff;
+  opacity: 0.65;
+}
+
+/* Over LIGHT background -> Crisp DARK text */
+.site-header:not(.scrolled) .nav-group[data-tone="dark"] .nav-item,
+.site-header:not(.scrolled)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item {
+  color: #141414;
+  opacity: 0.85;
+}
+
+.site-header:not(.scrolled) .nav-group[data-tone="dark"] .nav-item:hover,
+.site-header:not(.scrolled)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item:hover {
+  opacity: 1;
+}
+
+.site-header:not(.scrolled) .nav-group[data-tone="dark"] .nav-item.toggle-btn.active,
+.site-header:not(.scrolled)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item.toggle-btn.active {
+  color: #141414;
+  opacity: 1;
+}
+
+.site-header:not(.scrolled) .nav-group[data-tone="dark"] .nav-item.toggle-btn::after,
+.site-header:not(.scrolled)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item.toggle-btn::after {
+  background-color: #141414;
+}
+
+.site-header:not(.scrolled) .nav-group[data-tone="dark"] .nav-sep,
+.site-header:not(.scrolled)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-sep {
+  color: #141414;
+  opacity: 0.45;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+  .site-header {
+    height: 46px;
+  }
+  .site-nav {
+    padding: 0 1rem;
+  }
+  .nav-group {
+    gap: 0.5rem;
+  }
+  .nav-item {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    padding: 0.25rem 0.1rem;
+  }
+  .nav-sep {
+    font-size: 0.68rem;
+  }
+  .hero-subtitle-layer {
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    padding: 0;
+    max-width: 90vw;
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .site-nav {
+    padding: 0 0.65rem;
+  }
+  .nav-group {
+    gap: 0.35rem;
+  }
+  .nav-item {
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+  }
+}
+
+/* ==========================================================================
+   1. HERO SECTION (100vw x 100vh)
+   ========================================================================== */
+.hero-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-bottom: 2px solid var(--border-subtle);
+  transition: border-color 0.6s ease;
+}
+
+/* Space for background image behind the title */
+.hero-image-space {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-box);
+  z-index: 1;
+  overflow: hidden;
+  transition: background-color 0.6s ease;
+}
+
+/* High-resolution photography backdrop cross-fade stack */
+.hero-photo-stack {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-areas: "stack";
+}
+
+.hero-photo-stack > * {
+  grid-area: stack;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: opacity 0.75s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+body[data-mode="commercial"] .hero-photo-stack .photo-commercial {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+body[data-mode="commercial"] .hero-photo-stack .photo-weddings {
+  opacity: 0;
+  transform: scale(1.04);
+  pointer-events: none;
+}
+
+body[data-mode="weddings"] .hero-photo-stack .photo-commercial {
+  opacity: 0;
+  transform: scale(1.04);
+  pointer-events: none;
+}
+
+body[data-mode="weddings"] .hero-photo-stack .photo-weddings {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+/* Hero Title Box: Dual-Wipe Typography & Strictly Columnar Layout */
+.hero-title-wrap {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
+  padding: 0 1.5rem;
+  user-select: none;
+  width: 100%;
+}
+
+.hero-wipe-stack {
+  display: grid;
+  grid-template-areas: "stack";
+  align-items: center;
+  justify-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.hero-title-layer {
+  grid-area: stack;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text-main);
+  will-change: clip-path, opacity;
+  transition: clip-path 0.7s cubic-bezier(0.25, 1, 0.5, 1),
+              opacity 0.6s ease,
+              color 0.6s ease;
+}
+
+/* Commercial Sans Layer */
+.hero-title-commercial {
+  font-family: var(--font-commercial);
+  font-size: clamp(2.7rem, 7.8vw, 6.8rem);
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  z-index: 1;
+}
+
+/* Wedding Serif Layer */
+.hero-title-weddings {
+  font-family: var(--font-weddings);
+  font-size: clamp(3.25rem, 9.3vw, 8.15rem); /* Calibrated to match physical cap-height of sans stems */
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0.025em;
+  z-index: 2;
+}
+
+/* Commercial Mode:
+   - Commercial Sans is 100% visible (clip-path spans entire width)
+   - Wedding Serif is 100% clipped and hidden
+*/
+body[data-mode="commercial"] .hero-title-commercial {
+  clip-path: inset(0 0 0 0%);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body[data-mode="commercial"] .hero-title-weddings {
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Weddings Mode:
+   - Commercial Sans is 100% clipped from the left and completely hidden
+   - Wedding Serif is 100% unclipped and visible
+   There is zero overlay because Commercial disappears at the exact boundary where Wedding appears
+*/
+body[data-mode="weddings"] .hero-title-commercial {
+  clip-path: inset(0 0 0 100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+body[data-mode="weddings"] .hero-title-weddings {
+  clip-path: inset(0 0% 0 0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Subtitle Stack: Strictly below and synchronized dual-wipe */
+.hero-subtitle-wipe-stack {
+  margin-top: clamp(1rem, 2.5vh, 1.85rem);
+  display: grid;
+  grid-template-areas: "stack";
+  align-items: center;
+  justify-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.hero-subtitle-layer {
+  grid-area: stack;
+  font-family: var(--font-commercial);
+  font-size: clamp(0.78rem, 1.2vw, 0.95rem);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  text-shadow: none;
+  padding: 0;
+  border-radius: 0;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--text-main);
+  will-change: clip-path, opacity;
+  transition: clip-path 0.7s cubic-bezier(0.25, 1, 0.5, 1),
+              opacity 0.6s ease,
+              color 0.6s ease;
+}
+
+.hero-subtitle-commercial {
+  z-index: 1;
+}
+
+.hero-subtitle-weddings {
+  z-index: 2;
+}
+
+/* Commercial Mode: Subtitle Synchronized Wipe */
+body[data-mode="commercial"] .hero-subtitle-commercial {
+  clip-path: inset(0 0 0 0%);
+  opacity: 1;
+  pointer-events: auto;
+  color: #141414;
+}
+
+body[data-mode="commercial"] .hero-subtitle-weddings {
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Weddings Mode: Subtitle Synchronized Wipe */
+body[data-mode="weddings"] .hero-subtitle-commercial {
+  clip-path: inset(0 0 0 100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+body[data-mode="weddings"] .hero-subtitle-weddings {
+  clip-path: inset(0 0% 0 0);
+  opacity: 1;
+  pointer-events: auto;
+  color: #2C241E;
+}
+
+/* ==========================================================================
+   SHARED STICKY VIEWPORT CONTAINER
+   ========================================================================== */
+.sticky-viewport {
+  position: sticky;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: var(--bg-page);
+  transition: background-color 0.6s ease;
+}
+
+.section-indicator {
+  position: absolute;
+  top: 4.8rem;
+  left: clamp(1.25rem, 3.5vw, 2.5rem);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  z-index: 10;
+  transition: color 0.6s ease;
+}
+
+/* ==========================================================================
+   2. FRAME ZOOM SECTION (250vh scroll distance)
+   ========================================================================== */
+.frame-zoom-section {
+  position: relative;
+  height: 250vh;
+  border-bottom: 2px solid var(--border-subtle);
+  transition: border-color 0.6s ease;
+}
+
+/* The empty box that scales up as you scroll */
+.zoom-frame-box {
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-box);
+  border: 2px dashed var(--border-dashed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  will-change: transform;
+  transition: background-color 0.6s ease, border-color 0.6s ease;
+}
+
+.zoom-frame-box span {
+  font-size: 1.25rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  transition: color 0.6s ease;
+}
+
+/* ==========================================================================
+   3. STICKY HORIZONTAL IMAGE SCROLL SECTION (350vh scroll distance)
+   ========================================================================== */
+.horizontal-scroll-section {
+  position: relative;
+  height: 350vh;
+  border-bottom: 2px solid var(--border-subtle);
+  transition: border-color 0.6s ease;
+}
+
+.horizontal-track {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  padding-left: 5vw;
+  padding-right: 5vw;
+  width: max-content;
+  will-change: transform;
+}
+
+.image-box {
+  width: clamp(280px, 35vw, 480px);
+  height: clamp(380px, 55vh, 600px);
+  background-color: var(--bg-box);
+  border: 2px dashed var(--border-dashed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.6s ease, border-color 0.6s ease;
+}
+
+.image-box span {
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  transition: color 0.6s ease;
+}
+
+/* ==========================================================================
+   FOOTER SPACER
+   ========================================================================== */
+.footer-spacer {
+  height: 30vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: color 0.6s ease;
 }
