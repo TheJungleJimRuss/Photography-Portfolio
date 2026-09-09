@@ -43,11 +43,11 @@
 
         <!-- Section Navigation Tabs -->
         <div class="nav-group nav-group-right">
-          <a href="#hero" class="nav-item nav-link" id="nav-portfolio">Portfolio</a>
+          <a href="index.html" class="nav-item nav-link active" id="nav-portfolio">Portfolio</a>
           <span class="nav-sep" aria-hidden="true">·</span>
-          <a href="#about" class="nav-item nav-link" id="nav-about">About</a>
+          <a href="about.html" class="nav-item nav-link" id="nav-about">About</a>
           <span class="nav-sep" aria-hidden="true">·</span>
-          <a href="#contact" class="nav-item nav-link" id="nav-contact">Contact</a>
+          <a href="contact.html" class="nav-item nav-link" id="nav-contact">Contact</a>
         </div>
       </nav>
     </header>
@@ -322,34 +322,12 @@
         });
       });
 
-      // 3. SMOOTH NAVIGATION (Portfolio scrolls to top; About & Contact scroll to section)
+      // 3. SMOOTH NAVIGATION (Portfolio scrolls to top when already on home page)
       const navPortfolio = document.getElementById('nav-portfolio');
       if (navPortfolio) {
         navPortfolio.addEventListener('click', (e) => {
           e.preventDefault();
           window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-      }
-
-      const navAbout = document.getElementById('nav-about');
-      if (navAbout) {
-        navAbout.addEventListener('click', (e) => {
-          e.preventDefault();
-          const target = document.getElementById('about') || document.getElementById('contact');
-          if (target) {
-            target.scrollIntoView({ behavior: 'smooth' });
-          }
-        });
-      }
-
-      const navContact = document.getElementById('nav-contact');
-      if (navContact) {
-        navContact.addEventListener('click', (e) => {
-          e.preventDefault();
-          const target = document.getElementById('contact');
-          if (target) {
-            target.scrollIntoView({ behavior: 'smooth' });
-          }
         });
       }
 
