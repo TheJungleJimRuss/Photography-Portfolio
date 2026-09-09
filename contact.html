@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="description" content="Contact — Remix Glow Creative Co" />
+    <meta property="og:title" content="Contact — Remix Glow Creative Co" />
+    <meta property="og:description" content="Contact — Remix Glow Creative Co" />
+    <title>Contact — Remix Glow Creative Co</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" />
+    <script>
+      // Apply persisted dual-world mode immediately to prevent flash
+      (function() {
+        const savedMode = localStorage.getItem('glow_studio_mode') || 'commercial';
+        document.documentElement.setAttribute('data-mode', savedMode);
+      })();
+    </script>
+  </head>
+  <body data-mode="commercial">
+
+    <!-- ===================================================================
+         STUDIO MINIMAL NAVBAR
+         =================================================================== -->
+    <header class="site-header scrolled" id="site-header">
+      <nav class="site-nav" aria-label="Main Navigation">
+        <!-- Dual World Mode Switcher Tabs -->
+        <div class="nav-group nav-group-left">
+          <button type="button" class="nav-item toggle-btn active" data-target="commercial" id="btn-mode-commercial">
+            Commercial
+          </button>
+          <span class="nav-sep" aria-hidden="true">/</span>
+          <button type="button" class="nav-item toggle-btn" data-target="weddings" id="btn-mode-weddings">
+            Weddings
+          </button>
+        </div>
+
+        <!-- Section Navigation Tabs -->
+        <div class="nav-group nav-group-right">
+          <a href="index.html" class="nav-item nav-link" id="nav-portfolio">Portfolio</a>
+          <span class="nav-sep" aria-hidden="true">·</span>
+          <a href="about.html" class="nav-item nav-link" id="nav-about">About</a>
+          <span class="nav-sep" aria-hidden="true">·</span>
+          <a href="contact.html" class="nav-item nav-link active" id="nav-contact">Contact</a>
+        </div>
+      </nav>
+    </header>
+
+    <!-- ===================================================================
+         BASIC CONTACT PAGE
+         =================================================================== -->
+    <main class="page-view" id="view-contact">
+      <div class="page-shell">
+        <header class="page-hero" style="border-bottom: none;">
+          <div class="page-headline-wrap">
+            <h1 class="page-headline-commercial mode-text-commercial">
+              CONTACT
+            </h1>
+            <h1 class="page-headline-weddings mode-text-weddings" aria-hidden="true">
+              Contact
+            </h1>
+          </div>
+        </header>
+      </div>
+    </main>
+
+    <script>
+      const body = document.body;
+      const toggleButtons = document.querySelectorAll('.toggle-btn');
+      const siteHeader = document.getElementById('site-header');
+
+      function setMode(mode) {
+        body.setAttribute('data-mode', mode);
+        document.documentElement.setAttribute('data-mode', mode);
+        localStorage.setItem('glow_studio_mode', mode);
+
+        toggleButtons.forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.target === mode);
+        });
+      }
+
+      const savedMode = localStorage.getItem('glow_studio_mode') || 'commercial';
+      setMode(savedMode);
+
+      toggleButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          setMode(btn.dataset.target);
+        });
+      });
+    </script>
+  </body>
+</html>
