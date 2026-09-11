@@ -695,17 +695,32 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
 }
 
 .horizontal-track {
+  /* One frame width, shared by the frames and the padding below. */
+  --frame-width: clamp(280px, 35vw, 480px);
+  /* Pin the track's left edge to the viewport. The sticky viewport centres its
+     children, and a track wider than the screen would otherwise hang off both
+     sides equally, leaving the first frames permanently off-screen to the left
+     (the scroll only ever moves the track further left). */
+  align-self: flex-start;
   display: flex;
   align-items: center;
   gap: 2.5rem;
-  padding-left: 5vw;
-  padding-right: 5vw;
+  /* Half a screen minus half a frame on each side, so the first print starts
+     at the centre of the screen and the last one finishes there: every print
+     gets its fully developed moment. */
+  padding-left: calc(50vw - var(--frame-width) / 2);
+  padding-right: calc(50vw - var(--frame-width) / 2);
   width: max-content;
   will-change: transform;
 }
 
 .image-box {
-  width: clamp(280px, 35vw, 480px);
+  /* Darkroom develop amount: 0 = blank paper, 1 = full photograph. Written
+     per frame by renderScrollScenes in index.html; stays 1 without JS. */
+  --develop: 1;
+  position: relative;
+  overflow: hidden;
+  width: var(--frame-width);
   height: clamp(380px, 55vh, 600px);
   background-color: var(--bg-box);
   border: 2px dashed var(--border-dashed);
@@ -719,9 +734,75 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
 .image-box span {
   font-size: 0.95rem;
   letter-spacing: 0.1em;
-  color: var(--text-muted);
+  color: #ffffff; /* captions sit over photographs, lifted by the plate scrim */
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.45);
   text-transform: uppercase;
   transition: color 0.6s ease;
+}
+
+/* PHOTO PLATE
+   Holds the frame's photographs, edge to edge. To use a real photograph,
+   change the src of the <img> elements inside it. */
+.image-box-media {
+  position: absolute;
+  inset: 0;
+  background-color: var(--bg-box);
+  /* Placeholder texture, shown until the photographs load. */
+  background-image:
+    radial-gradient(ellipse 55% 65% at 38% 42%, rgba(255, 255, 255, 0.6), transparent 70%),
+    repeating-linear-gradient(115deg, transparent 0 26px, var(--border-subtle) 26px 27px);
+  transition: background-color 0.6s ease;
+}
+
+/* Each plate carries one photo per mode, stacked; the mode switch crossfades
+   them on the same 0.6s beat as the rest of the page. */
+.image-box-media img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.6s ease;
+}
+
+body[data-mode="commercial"] .image-box-media .mode-photo-weddings,
+body[data-mode="weddings"] .image-box-media .mode-photo-commercial {
+  opacity: 0;
+}
+
+/* Scrim: a soft centre darkening so the white captions read on any photo. */
+.image-box-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0.1) 75%);
+  pointer-events: none;
+}
+
+/* DARKROOM DEVELOP
+   Undeveloped paper laid over each print. Its opacity follows --develop, so a
+   print reads as a faint blank sheet near the screen edges and develops into
+   the full photograph at the centre. It uses the page colour, so undeveloped
+   prints sit quietly on the page in both modes. Opacity only: cheap to animate. */
+.image-box-media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: var(--bg-page);
+  opacity: calc((1 - var(--develop)) * 0.85);
+  will-change: opacity;
+  pointer-events: none;
+  transition: background-color 0.6s ease;
+}
+
+/* Captions stay fixed to the frame and surface late in the develop, once the
+   picture underneath is mostly there: hidden below 0.375, full at 1. */
+.image-box > .mode-crossfade-stack {
+  position: relative;
+  z-index: 1;
+  opacity: clamp(0, calc(var(--develop) * 1.6 - 0.6), 1);
 }
 
 /* ==========================================================================

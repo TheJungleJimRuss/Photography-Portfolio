@@ -128,10 +128,19 @@
           </div>
         </div>
 
-        <!-- Horizontal track of empty image boxes -->
+        <!-- Horizontal track. Each frame's .image-box-media plate holds one
+             photo per mode (the mode switch crossfades them), and each print
+             "develops" from blank paper as it slides to the screen centre.
+             PLACEHOLDER PHOTOS: the wikimedia.org ones are free-licensed
+             stand-ins, credited in README.md. Swap in real work by changing
+             the src; nothing else needs to change. -->
         <div class="horizontal-track">
           <!-- Item 1 -->
           <div class="image-box">
+            <div class="image-box-media" aria-hidden="true">
+              <img class="mode-photo-commercial" src="images/architecture_pavilion.jpg" alt="" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Villa_Balbianello_on_Como_Lake_8.jpg/1280px-Villa_Balbianello_on_Como_Lake_8.jpg" alt="" loading="lazy" decoding="async" />
+            </div>
             <div class="mode-crossfade-stack">
               <span class="mode-text-commercial">CAMPAIGN 01</span>
               <span class="mode-text-weddings">LAKE COMO 01</span>
@@ -139,6 +148,10 @@
           </div>
           <!-- Item 2 -->
           <div class="image-box">
+            <div class="image-box-media" aria-hidden="true">
+              <img class="mode-photo-commercial" src="images/editorial_fashion.jpg" alt="" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/ceremony_estate.jpg" alt="" loading="lazy" decoding="async" />
+            </div>
             <div class="mode-crossfade-stack">
               <span class="mode-text-commercial">LOOKBOOK 02</span>
               <span class="mode-text-weddings">THE CEREMONY 02</span>
@@ -146,6 +159,10 @@
           </div>
           <!-- Item 3 -->
           <div class="image-box">
+            <div class="image-box-media" aria-hidden="true">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg/1280px-Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg" alt="" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/wedding_ephrussi.jpg" alt="" loading="lazy" decoding="async" />
+            </div>
             <div class="mode-crossfade-stack">
               <span class="mode-text-commercial">BRAND FILM 03</span>
               <span class="mode-text-weddings">DETAILS & VEIL 03</span>
@@ -153,6 +170,10 @@
           </div>
           <!-- Item 4 -->
           <div class="image-box">
+            <div class="image-box-media" aria-hidden="true">
+              <img class="mode-photo-commercial" src="images/botanical_macro.jpg" alt="" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Sweet_Embrace_%28163554735%29.jpeg/1280px-Sweet_Embrace_%28163554735%29.jpeg" alt="" loading="lazy" decoding="async" />
+            </div>
             <div class="mode-crossfade-stack">
               <span class="mode-text-commercial">STILL LIFE 04</span>
               <span class="mode-text-weddings">SUNSET DANCE 04</span>
@@ -160,6 +181,10 @@
           </div>
           <!-- Item 5 -->
           <div class="image-box">
+            <div class="image-box-media" aria-hidden="true">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Runway_show_pexels.jpg/1280px-Runway_show_pexels.jpg" alt="" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Wedding_reception_tables_and_benches_%28Unsplash%29.jpg/1280px-Wedding_reception_tables_and_benches_%28Unsplash%29.jpg" alt="" loading="lazy" decoding="async" />
+            </div>
             <div class="mode-crossfade-stack">
               <span class="mode-text-commercial">RUNWAY 05</span>
               <span class="mode-text-weddings">RECEPTION 05</span>
@@ -167,6 +192,10 @@
           </div>
           <!-- Item 6 -->
           <div class="image-box">
+            <div class="image-box-media" aria-hidden="true">
+              <img class="mode-photo-commercial" src="images/minimal_interior.jpg" alt="" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/portrait_elena.jpg" alt="" loading="lazy" decoding="async" style="object-position: 50% 30%;" />
+            </div>
             <div class="mode-crossfade-stack">
               <span class="mode-text-commercial">EDITORIAL 06</span>
               <span class="mode-text-weddings">PORTRAITS 06</span>
@@ -498,51 +527,121 @@
         });
       }
 
-      // 4. SCROLL BINDINGS (Frame Zoom & Horizontal Carousel)
+      // 4. SCROLL BINDINGS (Frame Zoom, Horizontal Gallery & Darkroom Develop)
+      // All layout measurement lives in measureScrollScenes(), which runs only
+      // on load and resize. The per-frame render is plain arithmetic on those
+      // cached numbers plus style writes, and runs at most once per animation
+      // frame — so scrolling never forces a layout recalculation.
       const zoomSection = document.querySelector('.frame-zoom-section');
       const zoomBox = document.querySelector('.zoom-frame-box');
       const horizontalSection = document.querySelector('.horizontal-scroll-section');
       const horizontalTrack = document.querySelector('.horizontal-track');
+      const scrollHeader = document.getElementById('site-header');
+      const galleryFrames = Array.from(document.querySelectorAll('.image-box'));
+      const galleryStill = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-      function onScroll() {
-        // Frame Zoom Progress (scales from 0.45 up to 1.0)
-        if (zoomSection && zoomBox) {
-          const rect = zoomSection.getBoundingClientRect();
-          const maxScroll = zoomSection.offsetHeight - window.innerHeight;
-          const progress = Math.min(Math.max(-rect.top / maxScroll, 0), 1);
-          const scale = 0.45 + progress * 0.55;
-          zoomBox.style.transform = `scale(${scale})`;
+      // Darkroom develop: how a print's --develop (0 = blank paper, 1 = full
+      // photograph) follows its distance from the centre of the screen, in
+      // units of the frame's own width. A print holds fully developed within
+      // DEVELOP_HOLD of the centre, then fades back to paper over DEVELOP_FADE.
+      const DEVELOP_HOLD = 0.25;
+      const DEVELOP_FADE = 0.9;
+
+      const scene = {
+        zoomTop: 0, zoomRange: 1,
+        galleryTop: 0, galleryRange: 1, galleryTravel: 0,
+        viewportWidth: window.innerWidth,
+        frames: []
+      };
+
+      const clamp01 = value => (value < 0 ? 0 : value > 1 ? 1 : value);
+
+      function measureScrollScenes() {
+        const scrollY = window.scrollY;
+        const viewportHeight = window.innerHeight;
+        scene.viewportWidth = window.innerWidth;
+
+        if (zoomSection) {
+          scene.zoomTop = zoomSection.getBoundingClientRect().top + scrollY;
+          scene.zoomRange = Math.max(1, zoomSection.offsetHeight - viewportHeight);
         }
 
-        // Horizontal Scroll Progress (slides the track leftwards)
         if (horizontalSection && horizontalTrack) {
-          const rect = horizontalSection.getBoundingClientRect();
-          const maxScroll = horizontalSection.offsetHeight - window.innerHeight;
-          const progress = Math.min(Math.max(-rect.top / maxScroll, 0), 1);
-          const trackWidth = horizontalTrack.scrollWidth;
-          const maxTranslate = trackWidth - window.innerWidth + 80;
-          horizontalTrack.style.transform = `translateX(-${progress * Math.max(0, maxTranslate)}px)`;
+          scene.galleryTop = horizontalSection.getBoundingClientRect().top + scrollY;
+          scene.galleryRange = Math.max(1, horizontalSection.offsetHeight - viewportHeight);
+          // The track's padding centres the first and last frames (style.css),
+          // so travelling scrollWidth - viewport carries the scroll from the
+          // first print centred to the last print centred.
+          scene.galleryTravel = Math.max(0, horizontalTrack.scrollWidth - scene.viewportWidth);
         }
+
+        // offsetLeft ignores transforms, so these are each frame's resting
+        // positions no matter where the track currently sits.
+        scene.frames = galleryFrames.map(box => ({
+          box, center: box.offsetLeft + box.offsetWidth / 2, width: box.offsetWidth, develop: ''
+        }));
+      }
+
+      function renderScrollScenes() {
+        scrollFrame = 0;
+        const scrollY = window.scrollY;
+
+        // Frame Zoom (scales from 0.45 up to 1.0)
+        if (zoomBox) {
+          const progress = clamp01((scrollY - scene.zoomTop) / scene.zoomRange);
+          zoomBox.style.transform = `scale(${0.45 + progress * 0.55})`;
+        }
+
+        // Horizontal gallery (slides the track leftwards)
+        if (horizontalTrack) {
+          const progress = clamp01((scrollY - scene.galleryTop) / scene.galleryRange);
+          const shift = progress * scene.galleryTravel;
+          horizontalTrack.style.transform = `translate3d(${-shift}px, 0, 0)`;
+
+          // Darkroom develop: prints near the screen edges are blank paper, and
+          // each one develops into the full photograph (its caption surfacing
+          // last) as it slides into the centre. style.css turns --develop into
+          // the paper overlay's and the caption's opacity.
+          const half = scene.viewportWidth / 2;
+          const still = galleryStill.matches;
+          for (const frame of scene.frames) {
+            const fromCentre = Math.abs(frame.center - shift - half);
+            const t = 1 - clamp01((fromCentre - frame.width * DEVELOP_HOLD) / (frame.width * DEVELOP_FADE));
+            const develop = (still ? 1 : t * t * (3 - 2 * t)).toFixed(3); // smoothstep in and out of the hold
+            if (develop !== frame.develop) {
+              frame.develop = develop;
+              frame.box.style.setProperty('--develop', develop);
+            }
+          }
+        }
+
         // Navbar scroll enhancement (elevation shadow)
-        const siteHeader = document.getElementById('site-header');
-        if (siteHeader) {
-          siteHeader.classList.toggle('scrolled', window.scrollY > 20);
+        if (scrollHeader) {
+          scrollHeader.classList.toggle('scrolled', scrollY > 20);
         }
+      }
+
+      let scrollFrame = 0;
+      function onScroll() {
+        if (!scrollFrame) scrollFrame = requestAnimationFrame(renderScrollScenes);
       }
 
       window.addEventListener('scroll', onScroll, { passive: true });
       window.addEventListener('resize', () => {
-        onScroll();
+        measureScrollScenes();
+        renderScrollScenes();
         updateNavbarContrast();
         // Keep a mid-flight curtain tiled to the new viewport width.
         if (slatRelayout) slatRelayout();
       });
       window.addEventListener('load', () => {
         window.scrollTo(0, 0);
-        onScroll();
+        measureScrollScenes();
+        renderScrollScenes();
         updateNavbarContrast();
       });
-      onScroll();
+      measureScrollScenes();
+      renderScrollScenes();
       updateNavbarContrast();
     </script>
   </body>
