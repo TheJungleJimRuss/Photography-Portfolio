@@ -639,6 +639,16 @@
         measureScrollScenes();
         renderScrollScenes();
         updateNavbarContrast();
+
+        // Gallery photos lazy-load, but each frame's other-mode photo is
+        // parked outside the frame's clip until a mode switch slides it in, so
+        // the browser may not fetch it before the slide reveals it. Once the
+        // page has loaded, fetch them all in idle time instead.
+        const warmGallery = () => {
+          document.querySelectorAll('.image-box-media img[loading="lazy"]').forEach(img => { img.loading = 'eager'; });
+        };
+        if ('requestIdleCallback' in window) requestIdleCallback(warmGallery, { timeout: 3000 });
+        else setTimeout(warmGallery, 1500);
       });
       measureScrollScenes();
       renderScrollScenes();
