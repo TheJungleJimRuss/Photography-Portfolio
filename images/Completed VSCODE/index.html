@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="description" content="Barebones skeleton wireframe layout for commercial photography and film studio with full-viewport hero and empty element boxes." />
+    <title>Glow Creative Co</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" />
+    <script>
+      // Immediately reset scroll restoration so page always opens at the hero top
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      if (window.location.hash) {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+      window.scrollTo(0, 0);
+    </script>
+  </head>
+  <body data-mode="commercial">
+    <video
+      class="zoom-background-video"
+      src="CATCAT.mp4"
+      autoplay
+      muted
+      loop
+      playsinline
+      aria-hidden="true"
+    ></video>
+
+    <!-- ===================================================================
+         STUDIO MINIMAL NAVBAR
+         Subtle, non-intrusive full-width bar with clean tabs:
+         Left: Commercial / Weddings · Right: Portfolio · About · Contact
+         =================================================================== -->
+    <header class="site-header" id="site-header">
+      <nav class="site-nav" aria-label="Main Navigation">
+        <!-- Dual World Mode Switcher Tabs -->
+        <div class="nav-group nav-group-left">
+          <button type="button" class="nav-item toggle-btn active" data-target="commercial">
+            Commercial
+          </button>
+          <span class="nav-sep" aria-hidden="true">/</span>
+          <button type="button" class="nav-item toggle-btn" data-target="weddings">
+            Weddings
+          </button>
+        </div>
+
+        <!-- Section Navigation Tabs -->
+        <div class="nav-group nav-group-right">
+          <a href="#hero" class="nav-item nav-link" id="nav-portfolio">Portfolio</a>
+          <span class="nav-sep" aria-hidden="true">·</span>
+          <a href="#about" class="nav-item nav-link" id="nav-about">About</a>
+          <span class="nav-sep" aria-hidden="true">·</span>
+          <a href="#contact" class="nav-item nav-link" id="nav-contact">Contact</a>
+        </div>
+      </nav>
+    </header>
+
+    <!-- ===================================================================
+         1. HERO SECTION (Full Viewport: 100vw x 100vh)
+         =================================================================== -->
+    <header class="hero-container" id="hero">
+      <!-- Space for background image taking up entire viewport -->
+      <div class="hero-image-space">
+        <!-- Dual-World Photography Stack (Full, untouched photo) -->
+        <div class="hero-photo-stack">
+          <img
+            src="images/editorial_fashion.jpg"
+            alt="Commercial Editorial Portfolio"
+            class="hero-photo photo-commercial is-active"
+          />
+          <img
+            src="images/wedding_ephrussi.jpg"
+            alt="Villa Ephrussi Wedding Monograph"
+            class="hero-photo photo-weddings"
+          />
+        </div>
+      </div>
+
+      <!-- Hero Name Title: Dual-Wipe Typography (Commercial disappears as Wedding appears) -->
+      <div class="hero-title-wrap">
+        <div class="hero-wipe-stack">
+          <!-- Commercial Sans Layer -->
+          <h1 class="hero-title-layer hero-title-commercial">GLOW CREATIVE CO.</h1>
+          <!-- Wedding Serif Layer -->
+          <h1 class="hero-title-layer hero-title-weddings" aria-hidden="true">GLOW CREATIVE CO.</h1>
+        </div>
+        
+        <!-- Synchronized Wipe Subtitle Stack (strictly positioned below) -->
+        <div class="hero-subtitle-wipe-stack">
+          <p class="hero-subtitle-layer hero-subtitle-commercial">Commercial Stills & Directed Brand Cinema</p>
+          <p class="hero-subtitle-layer hero-subtitle-weddings" aria-hidden="true">Ceremonies, Private Estates & Monograph Archives</p>
+        </div>
+      </div>
+    </header>
+
+
+    <!-- ===================================================================
+         2. FRAME ZOOM SECTION
+         Pins during scroll while the empty frame box zooms to fill the screen
+         =================================================================== -->
+    <section class="frame-zoom-section" id="zoom-reel">
+      <div class="sticky-viewport">
+        <div class="section-indicator">
+          <div class="mode-crossfade-stack">
+            <span class="mode-text-commercial">Scroll Effect: Frame Zoom (Brand Campaign Showcase)</span>
+            <span class="mode-text-weddings">Scroll Effect: Frame Zoom (Featured Estate Ceremony)</span>
+          </div>
+        </div>
+
+        <!-- The empty frame box that zooms as you scroll -->
+        <div class="zoom-frame-box">
+          <div class="mode-crossfade-stack">
+            <span class="mode-text-commercial">COMMERCIAL CAMPAIGN REEL</span>
+            <span class="mode-text-weddings">ESTATE CEREMONY MONOGRAPH</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ===================================================================
+         3. STICKY HORIZONTAL IMAGE SCROLL SECTION
+         Pins during scroll while empty boxes slide across the viewport
+         =================================================================== -->
+    <section class="horizontal-scroll-section" id="work">
+      <div class="sticky-viewport">
+        <div class="section-indicator">
+          <div class="mode-crossfade-stack">
+            <span class="mode-text-commercial">Scroll Effect: Sticky Horizontal Gallery (Selected Commercial Works)</span>
+            <span class="mode-text-weddings">Scroll Effect: Sticky Horizontal Gallery (Selected Wedding Stories)</span>
+          </div>
+        </div>
+
+        <!-- Horizontal track of empty image boxes -->
+        <div class="horizontal-track">
+          <!-- Item 1 -->
+          <div class="image-box">
+            <div class="mode-crossfade-stack">
+              <span class="mode-text-commercial">CAMPAIGN 01</span>
+              <span class="mode-text-weddings">LAKE COMO 01</span>
+            </div>
+          </div>
+          <!-- Item 2 -->
+          <div class="image-box">
+            <div class="mode-crossfade-stack">
+              <span class="mode-text-commercial">LOOKBOOK 02</span>
+              <span class="mode-text-weddings">THE CEREMONY 02</span>
+            </div>
+          </div>
+          <!-- Item 3 -->
+          <div class="image-box">
+            <div class="mode-crossfade-stack">
+              <span class="mode-text-commercial">BRAND FILM 03</span>
+              <span class="mode-text-weddings">DETAILS & VEIL 03</span>
+            </div>
+          </div>
+          <!-- Item 4 -->
+          <div class="image-box">
+            <div class="mode-crossfade-stack">
+              <span class="mode-text-commercial">STILL LIFE 04</span>
+              <span class="mode-text-weddings">SUNSET DANCE 04</span>
+            </div>
+          </div>
+          <!-- Item 5 -->
+          <div class="image-box">
+            <div class="mode-crossfade-stack">
+              <span class="mode-text-commercial">RUNWAY 05</span>
+              <span class="mode-text-weddings">RECEPTION 05</span>
+            </div>
+          </div>
+          <!-- Item 6 -->
+          <div class="image-box">
+            <div class="mode-crossfade-stack">
+              <span class="mode-text-commercial">EDITORIAL 06</span>
+              <span class="mode-text-weddings">PORTRAITS 06</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer / Inquiries Section -->
+    <footer class="footer-spacer" id="contact">
+      <div class="mode-crossfade-stack">
+        <p class="mode-text-commercial">Commercial Studio Inquiries & Brand Commissions — studio@glowcreative.co</p>
+        <p class="mode-text-weddings">Private Ceremony Commissions & Monograph Archives — weddings@glowcreative.co</p>
+      </div>
+    </footer>
+
+
+    <!-- ===================================================================
+         INTERACTIVE LOGIC: TOGGLE SWITCH + SCROLL EFFECTS + ADAPTIVE CONTRAST
+         =================================================================== -->
+    <script>
+      // 1. DUAL-WORLD MODE TOGGLE LOGIC
+      const toggleButtons = document.querySelectorAll('.toggle-btn');
+      const body = document.body;
+      const siteHeader = document.getElementById('site-header');
+      const navGroupLeft = document.querySelector('.nav-group-left');
+      const navGroupRight = document.querySelector('.nav-group-right');
+      const photoCommercial = document.querySelector('.photo-commercial');
+      const photoWeddings = document.querySelector('.photo-weddings');
+
+      // 2. ADAPTIVE BACKGROUND LUMINANCE DETECTION
+      // Samples the top section of the active photograph where the navbar floats.
+      // Automatically inverts text: light text on dark imagery, dark text on light imagery.
+      const luminanceCache = new Map();
+
+      function updateNavbarContrast() {
+        const mode = body.getAttribute('data-mode') || 'commercial';
+        const activeImg = mode === 'weddings' ? photoWeddings : photoCommercial;
+
+        // Sensible instant defaults while image loads
+        if (mode === 'commercial') {
+          // Commercial studio image is high-key light -> dark text
+          if (siteHeader) siteHeader.setAttribute('data-nav-tone', 'dark');
+          if (navGroupLeft) navGroupLeft.setAttribute('data-tone', 'dark');
+          if (navGroupRight) navGroupRight.setAttribute('data-tone', 'dark');
+        } else {
+          // Weddings Villa Ephrussi has deep foliage top-left -> light text
+          if (siteHeader) siteHeader.setAttribute('data-nav-tone', 'light');
+          if (navGroupLeft) navGroupLeft.setAttribute('data-tone', 'light');
+          if (navGroupRight) navGroupRight.setAttribute('data-tone', 'light');
+        }
+
+        if (!activeImg) return;
+
+        if (!activeImg.complete || activeImg.naturalWidth === 0) {
+          activeImg.addEventListener('load', updateNavbarContrast, { once: true });
+          return;
+        }
+
+        const cacheKey = activeImg.currentSrc || activeImg.src;
+        let lumData = luminanceCache.get(cacheKey);
+
+        if (!lumData) {
+          try {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            if (ctx) {
+              const sampleW = 60;
+              const sampleH = 16;
+              canvas.width = sampleW;
+              canvas.height = sampleH;
+
+              // Sample the top 15% strip of the image (where the fixed navbar sits)
+              ctx.drawImage(
+                activeImg,
+                0, 0, activeImg.naturalWidth, Math.max(1, Math.floor(activeImg.naturalHeight * 0.15)),
+                0, 0, sampleW, sampleH
+              );
+
+              const imgData = ctx.getImageData(0, 0, sampleW, sampleH).data;
+              let leftLumSum = 0;
+              let leftCount = 0;
+              let rightLumSum = 0;
+              let rightCount = 0;
+              let totalLumSum = 0;
+              let totalCount = 0;
+
+              for (let y = 0; y < sampleH; y++) {
+                for (let x = 0; x < sampleW; x++) {
+                  const idx = (y * sampleW + x) * 4;
+                  const r = imgData[idx];
+                  const g = imgData[idx + 1];
+                  const b = imgData[idx + 2];
+                  // ITU-R BT.709 relative perceptual luminance
+                  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+                  totalLumSum += lum;
+                  totalCount++;
+
+                  // Left group covers ~first 35% of navbar width
+                  if (x < sampleW * 0.35) {
+                    leftLumSum += lum;
+                    leftCount++;
+                  }
+                  // Right group covers ~last 45% of navbar width (Portfolio, About, Contact)
+                  else if (x > sampleW * 0.55) {
+                    rightLumSum += lum;
+                    rightCount++;
+                  }
+                }
+              }
+
+              const avgLum = totalLumSum / (totalCount || 1);
+              const leftAvg = leftCount > 0 ? leftLumSum / leftCount : avgLum;
+              const rightAvg = rightCount > 0 ? rightLumSum / rightCount : avgLum;
+
+              lumData = {
+                overall: avgLum < 140 ? 'light' : 'dark',
+                left: leftAvg < 140 ? 'light' : 'dark',
+                right: rightAvg < 140 ? 'light' : 'dark',
+              };
+
+              luminanceCache.set(cacheKey, lumData);
+            }
+          } catch (e) {
+            // Fallback gracefully to default
+          }
+        }
+
+        if (lumData) {
+          if (siteHeader) siteHeader.setAttribute('data-nav-tone', lumData.overall);
+          if (navGroupLeft) navGroupLeft.setAttribute('data-tone', lumData.left);
+          if (navGroupRight) navGroupRight.setAttribute('data-tone', lumData.right);
+        }
+      }
+
+      // 2b. BUTTERY SLAT CURTAIN TRANSITION
+      // The outgoing frame drifts back while the incoming one is sliced into
+      // vertical slats that glide in — alternating up/down, staggered toward
+      // whichever tab you pressed — under a soft scale + blur bloom. Because
+      // every slat carries the full-bleed frame offset into its own column,
+      // the photograph re-assembles itself with no visible seams.
+      const heroStack = document.querySelector('.hero-photo-stack');
+      const heroPhotos = { commercial: photoCommercial, weddings: photoWeddings };
+
+      const SLAT_DURATION = 980;   // travel time of a single slat
+      const SLAT_STAGGER = 58;     // offset between neighbouring slats
+      const SLAT_EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const supportsWAAPI = typeof Element !== 'undefined' && !!Element.prototype.animate;
+
+      // Hand the stylesheet control of the photographs only once the script is
+      // actually running. Until this lands, the plain data-mode dissolve holds,
+      // so the hero is never blank if this file and style.css get out of step.
+      if (heroStack) heroStack.classList.add('curtain-ready');
+
+      let slatLayer = null;          // the live curtain, if one is running
+      let slatAnimations = [];       // every animation belonging to that curtain
+      let slatSettle = null;         // callback that lands the transition early
+      let slatRelayout = null;       // re-measures the curtain on resize
+
+      function slatCount() {
+        const w = window.innerWidth;
+        if (w < 640) return 4;
+        if (w < 1100) return 5;
+        return 6;
+      }
+
+      // Land whatever curtain is mid-flight instantly (fast repeated clicks,
+      // or a mode change arriving before the previous one finished).
+      function settleCurtain() {
+        if (slatSettle) slatSettle();
+      }
+
+      function swapBasePhoto(mode) {
+        Object.keys(heroPhotos).forEach(key => {
+          const img = heroPhotos[key];
+          if (!img) return;
+          img.classList.toggle('is-active', key === mode);
+          img.style.transform = '';
+          img.style.filter = '';
+        });
+      }
+
+      function runSlatCurtain(fromMode, toMode) {
+        const incoming = heroPhotos[toMode];
+        const outgoing = heroPhotos[fromMode];
+        if (!heroStack || !incoming) {
+          swapBasePhoto(toMode);
+          return;
+        }
+
+        const source = incoming.currentSrc || incoming.src;
+        const count = slatCount();
+        // Reveal sweeps toward the tab that was pressed: Commercial sits on the
+        // left of the navbar, Weddings on the right.
+        const sweepRight = toMode === 'weddings';
+        const total = SLAT_DURATION + SLAT_STAGGER * (count - 1);
+
+        const layer = document.createElement('div');
+        layer.className = 'hero-slats';
+        layer.setAttribute('aria-hidden', 'true');
+
+        const slats = [];
+        for (let i = 0; i < count; i++) {
+          const slat = document.createElement('div');
+          slat.className = 'hero-slat';
+          const inner = document.createElement('div');
+          inner.className = 'hero-slat-inner';
+          inner.style.backgroundImage = `url("${source}")`;
+          slat.appendChild(inner);
+          layer.appendChild(slat);
+          slats.push({ slat, inner });
+        }
+
+        // Integer edges tile the viewport exactly — no hairline gaps, no overlap.
+        function layoutSlats() {
+          const width = heroStack.clientWidth || window.innerWidth;
+          for (let i = 0; i < count; i++) {
+            const left = Math.round((i * width) / count);
+            const right = Math.round(((i + 1) * width) / count);
+            const { slat, inner } = slats[i];
+            slat.style.left = left + 'px';
+            slat.style.width = (right - left) + 'px';
+            inner.style.left = -left + 'px';
+            inner.style.width = width + 'px';
+          }
+        }
+
+        layoutSlats();
+        heroStack.appendChild(layer);
+
+        slatLayer = layer;
+        slatRelayout = layoutSlats;
+        slatAnimations = [];
+
+        // Everything below animates transform and opacity ONLY. Both are handled
+        // on the compositor, so cost does not grow with screen size — which
+        // matters here, where each slat carries a full-viewport image.
+        slats.forEach(({ slat, inner }, i) => {
+          const order = sweepRight ? i : count - 1 - i;
+          const delay = order * SLAT_STAGGER;
+          const fromY = i % 2 === 0 ? '-102%' : '102%';
+
+          // Travel plus a slight settle out of scale, in one transform.
+          slatAnimations.push(inner.animate([
+            { transform: `translate3d(0, ${fromY}, 0) scale(1.06)` },
+            { transform: 'translate3d(0, 0, 0) scale(1)' }
+          ], { duration: SLAT_DURATION, delay, easing: SLAT_EASE, fill: 'both' }));
+
+          // Each slat materialises as it travels, which softens the leading
+          // edge the way the old blur did but for free.
+          slatAnimations.push(slat.animate([
+            { opacity: 0 },
+            { opacity: 1 }
+          ], { duration: SLAT_DURATION * 0.45, delay, easing: 'cubic-bezier(0.33, 0.9, 0.4, 1)', fill: 'both' }));
+        });
+
+        // The frame being replaced drifts gently back as it leaves.
+        if (outgoing) {
+          slatAnimations.push(outgoing.animate([
+            { transform: 'scale(1)' },
+            { transform: 'scale(1.06)' }
+          ], { duration: total, easing: SLAT_EASE, fill: 'both' }));
+        }
+
+        let landed = false;
+        const land = () => {
+          if (landed) return;
+          landed = true;
+          clearTimeout(timer);
+          slatAnimations.forEach(anim => anim.cancel());
+          slatAnimations = [];
+          // At rest the curtain is pixel-identical to the incoming photograph,
+          // so handing over to the base layer is invisible.
+          swapBasePhoto(toMode);
+          if (layer.parentNode) layer.parentNode.removeChild(layer);
+          if (slatLayer === layer) {
+            slatLayer = null;
+            slatSettle = null;
+            slatRelayout = null;
+          }
+        };
+
+        slatSettle = land;
+        // Timer rather than the animation's finished promise: it still fires if
+        // the tab is backgrounded mid-transition, so we never strand the curtain.
+        const timer = setTimeout(land, total + 40);
+      }
+
+      function setMode(mode) {
+        if (body.getAttribute('data-mode') === mode) return;
+
+        const previous = body.getAttribute('data-mode') || 'commercial';
+
+        body.setAttribute('data-mode', mode);
+
+        toggleButtons.forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.target === mode);
+        });
+
+        settleCurtain();
+
+        // Skip the choreography when it cannot be seen or is not wanted.
+        const heroOffscreen = window.scrollY > window.innerHeight * 0.9;
+        if (!supportsWAAPI || reducedMotion.matches || heroOffscreen) {
+          swapBasePhoto(mode);
+        } else {
+          runSlatCurtain(previous, mode);
+        }
+
+        updateNavbarContrast();
+      }
+
+      toggleButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          setMode(btn.dataset.target);
+        });
+      });
+
+      // 3. SMOOTH NAVIGATION (Portfolio scrolls to top; About & Contact scroll to section)
+      const navPortfolio = document.getElementById('nav-portfolio');
+      if (navPortfolio) {
+        navPortfolio.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+
+      const navAbout = document.getElementById('nav-about');
+      if (navAbout) {
+        navAbout.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = document.getElementById('about') || document.getElementById('contact');
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+
+      const navContact = document.getElementById('nav-contact');
+      if (navContact) {
+        navContact.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = document.getElementById('contact');
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+
+      // 4. SCROLL BINDINGS (Frame Zoom & Horizontal Carousel)
+      const zoomSection = document.querySelector('.frame-zoom-section');
+      const zoomBox = document.querySelector('.zoom-frame-box');
+      const zoomVideo = document.querySelector('.zoom-background-video');
+      const horizontalSection = document.querySelector('.horizontal-scroll-section');
+      const horizontalTrack = document.querySelector('.horizontal-track');
+
+      function onScroll() {
+        // Frame Zoom Progress (scales from 0.45 up to 1.0)
+        if (zoomSection && zoomBox) {
+          const rect = zoomSection.getBoundingClientRect();
+          const maxScroll = zoomSection.offsetHeight - window.innerHeight;
+          const progress = Math.min(Math.max(-rect.top / maxScroll, 0), 1);
+          const scale = 0.45 + progress * 0.55;
+          zoomBox.style.transform = `scale(${scale})`;
+          if (zoomVideo) {
+            const videoIsBehindReel = rect.top < window.innerHeight && rect.bottom > 0;
+            zoomVideo.classList.toggle('is-active', videoIsBehindReel);
+            // Move more slowly than the scrolling sections for the parallax effect.
+            const videoOffset = reducedMotion.matches
+              ? 0
+              : (0.5 - progress) * window.innerHeight * 0.08;
+            zoomVideo.style.transform = `translate3d(0, ${videoOffset}px, 0) scale(1.12)`;
+          }
+        }
+
+        // Horizontal Scroll Progress (slides the track leftwards)
+        if (horizontalSection && horizontalTrack) {
+          const rect = horizontalSection.getBoundingClientRect();
+          const maxScroll = horizontalSection.offsetHeight - window.innerHeight;
+          const progress = Math.min(Math.max(-rect.top / maxScroll, 0), 1);
+          const trackWidth = horizontalTrack.scrollWidth;
+          const maxTranslate = trackWidth - window.innerWidth + 80;
+          horizontalTrack.style.transform = `translateX(-${progress * Math.max(0, maxTranslate)}px)`;
+        }
+        // Navbar scroll enhancement (elevation shadow)
+        const siteHeader = document.getElementById('site-header');
+        if (siteHeader) {
+          siteHeader.classList.toggle('scrolled', window.scrollY > 20);
+        }
+      }
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', () => {
+        onScroll();
+        updateNavbarContrast();
+        // Keep a mid-flight curtain tiled to the new viewport width.
+        if (slatRelayout) slatRelayout();
+      });
+      window.addEventListener('load', () => {
+        window.scrollTo(0, 0);
+        onScroll();
+        updateNavbarContrast();
+      });
+      onScroll();
+      updateNavbarContrast();
+    </script>
+  </body>
+</html>
