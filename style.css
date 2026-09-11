@@ -65,9 +65,12 @@ body {
 }
 
 /* ==========================================================================
-   SEAMLESS CROSS-FADE GRID STACK
-   Renders both variants in the exact same coordinates.
-   Dissolves smoothly via opacity, transform, and soft optical blur.
+   MODE TEXT ROLL
+   Both variants share one grid cell inside a clipped line. On a mode switch
+   the outgoing words roll out of the line and the incoming ones roll in, like
+   a split-flap board. Commercial is parked above the line and Weddings below
+   it, so switching to Weddings rolls up and switching back rolls down.
+   Transform only: no fade, no blur.
    ========================================================================== */
 .mode-crossfade-stack {
   display: inline-grid;
@@ -75,45 +78,39 @@ body {
   align-items: center;
   justify-items: center;
   position: relative;
+  overflow: hidden;
+  padding-block: 0.15em; /* room for descenders inside the clip */
 }
 
 .mode-crossfade-stack > * {
   grid-area: stack;
-  transition: opacity 0.55s ease,
-              transform 0.55s ease,
-              filter 0.5s ease;
-  will-change: opacity, transform, filter;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
   white-space: nowrap;
 }
 
-/* In Commercial Mode */
-body[data-mode="commercial"] .mode-text-commercial {
-  opacity: 1;
+/* The live variant sits on the line. */
+body[data-mode="commercial"] .mode-text-commercial,
+body[data-mode="weddings"] .mode-text-weddings {
   transform: translateY(0);
-  filter: blur(0px);
   pointer-events: auto;
+}
+
+/* Parked variants: 100% plus the clip padding, so they fully clear the line. */
+body[data-mode="weddings"] .mode-text-commercial {
+  transform: translateY(calc(-100% - 0.3em));
+  pointer-events: none;
 }
 
 body[data-mode="commercial"] .mode-text-weddings {
-  opacity: 0;
-  transform: translateY(6px);
-  filter: blur(4px);
+  transform: translateY(calc(100% + 0.3em));
   pointer-events: none;
 }
 
-/* In Weddings Mode */
-body[data-mode="weddings"] .mode-text-commercial {
-  opacity: 0;
-  transform: translateY(-6px);
-  filter: blur(4px);
-  pointer-events: none;
-}
-
-body[data-mode="weddings"] .mode-text-weddings {
-  opacity: 1;
-  transform: translateY(0);
-  filter: blur(0px);
-  pointer-events: auto;
+@media (prefers-reduced-motion: reduce) {
+  .mode-crossfade-stack > * {
+    transition: none;
+  }
 }
 
 /* ==========================================================================
@@ -723,19 +720,20 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
   width: var(--frame-width);
   height: clamp(380px, 55vh, 600px);
   background-color: var(--bg-box);
-  border: 2px dashed var(--border-dashed);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: background-color 0.6s ease, border-color 0.6s ease;
+  transition: background-color 0.6s ease;
 }
 
 .image-box span {
   font-size: 0.95rem;
   letter-spacing: 0.1em;
   color: #ffffff; /* captions sit over photographs, lifted by the plate scrim */
-  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.45);
+  /* Kept tight: captions roll inside a clipped line, which would cut a wide
+     soft shadow off at its edges. The scrim does the heavy lifting. */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   text-transform: uppercase;
   transition: color 0.6s ease;
 }
@@ -754,8 +752,15 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
   transition: background-color 0.6s ease;
 }
 
-/* Each plate carries one photo per mode, stacked; the mode switch crossfades
-   them on the same 0.6s beat as the rest of the page. */
+/* MODE PUSH
+   Each plate carries one photo per mode. On a mode switch the incoming photo
+   pushes in from its own side while the outgoing one leaves the other way:
+   Commercial is parked to the left and Weddings to the right, matching the nav
+   tabs and the hero curtain. Both zoom-settle between 1.12 and 1 on the way.
+   The 106% offset is tied to that 1.12 scale (6% overhang per side): it parks
+   each photo exactly at the frame edge, and keeps the incoming and outgoing
+   edges touching for the whole slide, with no gap and no peeking sliver.
+   Transform only, so it stays smooth. */
 .image-box-media img {
   position: absolute;
   inset: 0;
@@ -763,12 +768,53 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: opacity 0.6s ease;
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 
-body[data-mode="commercial"] .image-box-media .mode-photo-weddings,
+body[data-mode="commercial"] .image-box-media .mode-photo-commercial,
+body[data-mode="weddings"] .image-box-media .mode-photo-weddings {
+  transform: translateX(0) scale(1);
+}
+
 body[data-mode="weddings"] .image-box-media .mode-photo-commercial {
-  opacity: 0;
+  transform: translateX(-106%) scale(1.12);
+}
+
+body[data-mode="commercial"] .image-box-media .mode-photo-weddings {
+  transform: translateX(106%) scale(1.12);
+}
+
+/* The push ripples across the gallery toward the tab you picked: left to
+   right into Weddings, right to left back into Commercial. Captions roll in
+   just behind their photo. */
+.image-box:nth-child(1) { --frame-index: 0; }
+.image-box:nth-child(2) { --frame-index: 1; }
+.image-box:nth-child(3) { --frame-index: 2; }
+.image-box:nth-child(4) { --frame-index: 3; }
+.image-box:nth-child(5) { --frame-index: 4; }
+.image-box:nth-child(6) { --frame-index: 5; }
+
+body[data-mode="weddings"] .image-box-media img {
+  transition-delay: calc(var(--frame-index, 0) * 70ms);
+}
+
+body[data-mode="commercial"] .image-box-media img {
+  transition-delay: calc((5 - var(--frame-index, 0)) * 70ms);
+}
+
+body[data-mode="weddings"] .image-box .mode-crossfade-stack > * {
+  transition-delay: calc(var(--frame-index, 0) * 70ms + 120ms);
+}
+
+body[data-mode="commercial"] .image-box .mode-crossfade-stack > * {
+  transition-delay: calc((5 - var(--frame-index, 0)) * 70ms + 120ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-box-media img {
+    transition: none;
+  }
 }
 
 /* Scrim: a soft centre darkening so the white captions read on any photo. */
