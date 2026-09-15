@@ -1303,6 +1303,49 @@ body[data-mode="weddings"] .lightbox-title {
 }
 
 /* ==========================================================================
+   BACKGROUND VIDEOS (Matiaz's parallax, ported from his copy of the site)
+   Full-screen videos behind the page, created and driven by the script in
+   index.html. In Commercial mode the cat fills the screen around the zooming
+   frame and the puppy shows through the frame itself (cropped to it), then
+   fills the screen behind the photo row. They show through the zoom section
+   and the row, whose backgrounds turn see-through for them, and through the
+   zooming frame, which becomes a translucent pane. Weddings mode hides them.
+   ========================================================================== */
+.background-video {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  object-position: center center;
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(1.12);
+  pointer-events: none;
+  z-index: 0;
+  will-change: transform, opacity;
+  transition: opacity 0.6s ease;
+}
+
+/* The puppy starts cropped to the zooming frame's starting size (45%). */
+.puppy-background-video {
+  clip-path: inset(27.5% 27.5%);
+  will-change: transform, clip-path, opacity;
+}
+
+body[data-mode="commercial"] .background-video.is-active {
+  opacity: 0.9;
+}
+
+body[data-mode="commercial"] .frame-zoom-section .sticky-viewport,
+body[data-mode="commercial"] .horizontal-scroll-section .sticky-viewport {
+  background-color: transparent;
+}
+
+body[data-mode="commercial"] .zoom-frame-box {
+  background-color: rgba(229, 229, 229, 0.68); /* translucent, so the video shows through */
+}
+
+/* ==========================================================================
    FOOTER SPACER
    ========================================================================== */
 .footer-spacer {
