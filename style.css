@@ -1096,6 +1096,213 @@ body[data-mode="weddings"] .hero-image-space:has(.photo-weddings.is-loaded)::bef
 }
 
 /* ==========================================================================
+   LIGHTBOX
+   Click (or press Enter on) a photo in the scrolling row or the print stack
+   to see it large. Built and driven by the script in index.html, which also
+   marks the photos it made clickable with .can-enlarge.
+   ========================================================================== */
+.can-enlarge {
+  cursor: zoom-in;
+}
+
+.can-enlarge:focus-visible {
+  outline: 2px solid var(--text-main);
+  outline-offset: 6px;
+}
+
+html.lightbox-open {
+  overflow: hidden; /* the page stays put behind the viewer */
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  border: 0;
+  background-color: rgba(12, 12, 12, 0.95);
+  color: #ffffff;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 1.5rem);
+}
+
+.lightbox[open] {
+  display: grid;
+  animation: lightbox-in 0.22s ease-out;
+}
+
+body[data-mode="weddings"] .lightbox {
+  background-color: rgba(30, 24, 20, 0.96); /* warm espresso in Weddings mode */
+}
+
+.lightbox::backdrop {
+  background: transparent; /* the dialog itself is the dark backdrop */
+}
+
+.lightbox-figure {
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.lightbox[open] .lightbox-figure {
+  animation: lightbox-grow 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lightbox-frame {
+  position: relative;
+  width: 100%;
+  height: min(78vh, 1000px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: pan-y; /* sideways swipes flip photos */
+}
+
+.lightbox-photo {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: opacity 0.25s ease;
+}
+
+/* Skeleton while a photo is still loading. */
+.lightbox-frame.is-loading .lightbox-photo {
+  opacity: 0;
+}
+
+.lightbox-frame.is-loading::before {
+  content: '';
+  position: absolute;
+  inset: 12% 22%;
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.08);
+  background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.12) 50%, transparent 80%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: lightbox-sweep 1.4s ease-in-out infinite;
+}
+
+.lightbox-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: min(640px, 90vw);
+  text-align: center;
+}
+
+.lightbox-count {
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+
+.lightbox-title {
+  font-size: 1.05rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+body[data-mode="weddings"] .lightbox-title {
+  font-family: var(--font-weddings);
+  font-size: 1.5rem;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.lightbox-blurb {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  opacity: 0.72;
+}
+
+.lightbox-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.lightbox-button:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.lightbox-button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: clamp(0.75rem, 2vw, 1.5rem);
+  right: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+@keyframes lightbox-in {
+  from { opacity: 0; }
+}
+
+@keyframes lightbox-grow {
+  from { opacity: 0; transform: scale(0.94); }
+}
+
+@keyframes lightbox-sweep {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+
+@media (max-width: 600px) {
+  .lightbox {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lightbox-frame {
+    height: 70vh;
+  }
+
+  /* Side buttons move to the bottom corners; swiping works too. */
+  .lightbox-prev,
+  .lightbox-next {
+    position: absolute;
+    bottom: 1rem;
+  }
+
+  .lightbox-prev { left: 1rem; }
+  .lightbox-next { right: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox[open],
+  .lightbox[open] .lightbox-figure,
+  .lightbox-frame.is-loading::before {
+    animation: none;
+  }
+}
+
+/* ==========================================================================
    FOOTER SPACER
    ========================================================================== */
 .footer-spacer {

@@ -791,6 +791,141 @@
         btn.addEventListener('focus', intent);
         btn.addEventListener('touchstart', intent, { passive: true });
       });
+
+      // 6. LIGHTBOX: click (or press Enter on) a photo in the scrolling row or
+      // the print stack to see it large. The arrow keys, the side buttons or a
+      // swipe flip through that section's photos; Esc, the close button or a
+      // click on the dark background closes it. Built here rather than in the
+      // markup because it only works with the script anyway.
+      const lightbox = document.createElement('dialog');
+      lightbox.className = 'lightbox';
+      lightbox.setAttribute('aria-label', 'Photo viewer');
+      lightbox.innerHTML = `
+        <button class="lightbox-button lightbox-close" type="button" aria-label="Close">&times;</button>
+        <button class="lightbox-button lightbox-prev" type="button" aria-label="Previous photo">&lsaquo;</button>
+        <figure class="lightbox-figure">
+          <div class="lightbox-frame"><img class="lightbox-photo" alt="" /></div>
+          <figcaption class="lightbox-caption">
+            <span class="lightbox-count"></span>
+            <span class="lightbox-title"></span>
+            <span class="lightbox-blurb"></span>
+          </figcaption>
+        </figure>
+        <button class="lightbox-button lightbox-next" type="button" aria-label="Next photo">&rsaquo;</button>`;
+      document.body.appendChild(lightbox);
+
+      const lbFigure = lightbox.querySelector('.lightbox-figure');
+      const lbFrame = lightbox.querySelector('.lightbox-frame');
+      const lbPhoto = lightbox.querySelector('.lightbox-photo');
+      const lbCount = lightbox.querySelector('.lightbox-count');
+      const lbTitle = lightbox.querySelector('.lightbox-title');
+      const lbBlurb = lightbox.querySelector('.lightbox-blurb');
+      let lightboxSet = [];
+      let lightboxIndex = 0;
+      let lightboxReturn = null;
+
+      const currentMode = () => (body.getAttribute('data-mode') === 'weddings' ? 'weddings' : 'commercial');
+      const pad2 = n => String(n).padStart(2, '0');
+
+      // Each section flips through its own photos, in the mode on screen.
+      function rowPhotos(mode) {
+        return galleryFrames.map(box => ({
+          src: box.querySelector(`.mode-photo-${mode}`).src,
+          title: box.querySelector(`.mode-text-${mode}`).textContent.trim(),
+          blurb: ''
+        }));
+      }
+
+      function stackPhotos(mode) {
+        return stackPrints.map((print, i) => {
+          const copy = stackTexts[i].querySelector(`.for-${mode}`);
+          return {
+            src: print.querySelector(`.mode-photo-${mode}`).src,
+            title: copy.querySelector('.stack-title').textContent.trim(),
+            blurb: copy.querySelector('.stack-blurb').textContent.trim()
+          };
+        });
+      }
+
+      function showLightboxPhoto(index, direction) {
+        lightboxIndex = (index + lightboxSet.length) % lightboxSet.length;
+        const item = lightboxSet[lightboxIndex];
+        // Skeleton until the photo is ready (usually it already is).
+        lbFrame.classList.add('is-loading');
+        lbPhoto.onload = () => lbFrame.classList.remove('is-loading');
+        lbPhoto.src = item.src;
+        lbPhoto.alt = item.title;
+        if (lbPhoto.complete && lbPhoto.naturalWidth > 0) lbFrame.classList.remove('is-loading');
+        lbCount.textContent = `${pad2(lightboxIndex + 1)} / ${pad2(lightboxSet.length)}`;
+        lbTitle.textContent = item.title;
+        lbBlurb.textContent = item.blurb;
+        lbBlurb.hidden = !item.blurb;
+        // The new photo slides in from the side you're flipping towards.
+        if (direction && !motionStill.matches) {
+          lbFigure.animate([
+            { transform: `translateX(${direction * 32}px)`, opacity: 0.35 },
+            { transform: 'none', opacity: 1 }
+          ], { duration: 360, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+        }
+      }
+
+      function openLightbox(set, index, returnTo) {
+        lightboxSet = set;
+        lightboxReturn = returnTo;
+        document.documentElement.classList.add('lightbox-open');
+        lightbox.showModal();
+        showLightboxPhoto(index, 0);
+      }
+
+      lightbox.addEventListener('close', () => {
+        document.documentElement.classList.remove('lightbox-open');
+        if (lightboxReturn) lightboxReturn.focus({ preventScroll: true });
+      });
+      lightbox.querySelector('.lightbox-close').addEventListener('click', () => lightbox.close());
+      lightbox.querySelector('.lightbox-prev').addEventListener('click', () => showLightboxPhoto(lightboxIndex - 1, -1));
+      lightbox.querySelector('.lightbox-next').addEventListener('click', () => showLightboxPhoto(lightboxIndex + 1, 1));
+      lightbox.addEventListener('click', e => {
+        if (e.target === lightbox) lightbox.close();
+      });
+      lightbox.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); showLightboxPhoto(lightboxIndex + 1, 1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); showLightboxPhoto(lightboxIndex - 1, -1); }
+      });
+
+      // Swipe on touch screens (or drag with a mouse) to flip.
+      let swipeStartX = null;
+      lbFrame.addEventListener('pointerdown', e => { swipeStartX = e.clientX; });
+      lbFrame.addEventListener('pointerup', e => {
+        if (swipeStartX === null) return;
+        const dx = e.clientX - swipeStartX;
+        swipeStartX = null;
+        if (Math.abs(dx) > 50) showLightboxPhoto(lightboxIndex + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
+      });
+
+      // Make the photos openable, by mouse and by keyboard.
+      function makeEnlargeable(el, label, open) {
+        el.classList.add('can-enlarge');
+        el.tabIndex = 0;
+        el.setAttribute('role', 'button');
+        el.setAttribute('aria-label', label);
+        el.addEventListener('click', open);
+        el.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+        });
+      }
+
+      galleryFrames.forEach((box, i) => {
+        makeEnlargeable(box, `Enlarge photo ${i + 1} of ${galleryFrames.length}`,
+          () => openLightbox(rowPhotos(currentMode()), i, box));
+      });
+
+      if (stackPile) {
+        // The pile was hidden from screen readers as pure decoration; it's a
+        // control now, so expose it.
+        stackPile.removeAttribute('aria-hidden');
+        makeEnlargeable(stackPile, 'Enlarge the photo on top of the stack',
+          () => openLightbox(stackPhotos(currentMode()), Math.max(0, scene.stackShowing), stackPile));
+      }
       measureScrollScenes();
       renderScrollScenes();
       updateNavbarContrast();
