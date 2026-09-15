@@ -654,15 +654,20 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
   display: flex;
   align-items: center;
   gap: 2.5rem;
-  /* Half a screen minus half a frame on each side, so the row starts with its
-     first photo centred and finishes with its last photo centred. */
+  /* Start with the first photo centred (half a screen minus half a frame of
+     padding on the left), but finish with the row running out to the right
+     edge, so the last photo ends on the right with others beside it rather
+     than alone in the middle. */
   padding-left: calc(50vw - var(--frame-width) / 2);
-  padding-right: calc(50vw - var(--frame-width) / 2);
+  padding-right: 5vw;
   width: max-content;
   will-change: transform;
 }
 
 .image-box {
+  /* Darkroom develop amount: 0 = blank paper, 1 = full photograph. Written
+     per frame by renderScrollScenes in index.html; stays 1 without JS. */
+  --develop: 1;
   position: relative;
   overflow: hidden;
   width: var(--frame-width);
@@ -769,10 +774,29 @@ body[data-mode="commercial"] .image-box .mode-crossfade-stack > * {
   pointer-events: none;
 }
 
-/* Captions stay fixed to the frame, above the plate. */
+/* DARKROOM DEVELOP: the focus on the photo you're looking at
+   Undeveloped paper laid over each print. Its opacity follows --develop, so a
+   print reads as a faint blank sheet near the screen edges and develops into
+   the full photograph at the centre. It uses the page colour, so undeveloped
+   prints sit quietly on the page in both modes. Opacity only: cheap to animate. */
+.image-box-media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: var(--bg-page);
+  opacity: calc((1 - var(--develop)) * 0.85);
+  will-change: opacity;
+  pointer-events: none;
+  transition: background-color 0.6s ease;
+}
+
+/* Captions stay fixed to the frame and surface late in the develop, once the
+   picture underneath is mostly there: hidden below 0.375, full at 1. */
 .image-box > .mode-crossfade-stack {
   position: relative;
   z-index: 1;
+  opacity: clamp(0, calc(var(--develop) * 1.6 - 0.6), 1);
 }
 
 /* ==========================================================================
@@ -785,8 +809,8 @@ body[data-mode="commercial"] .image-box .mode-crossfade-stack > * {
    ========================================================================== */
 .stack-section {
   position: relative;
-  /* One screen to pin the section, plus ~70vh of scrolling per print (6). */
-  height: calc(100vh + 6 * 70vh);
+  /* One screen to pin the section, plus ~70vh of scrolling per print (7). */
+  height: calc(100vh + 7 * 70vh);
   border-bottom: 2px solid var(--border-subtle);
   transition: border-color 0.6s ease;
 }
@@ -828,12 +852,13 @@ body[data-mode="weddings"] .stack-print {
 
 /* The first print lies on top of the pile, the last at the bottom. In CSS so
    the order is right even before (or without) the script. */
-.stack-print:nth-child(1) { z-index: 6; }
-.stack-print:nth-child(2) { z-index: 5; }
-.stack-print:nth-child(3) { z-index: 4; }
-.stack-print:nth-child(4) { z-index: 3; }
-.stack-print:nth-child(5) { z-index: 2; }
-.stack-print:nth-child(6) { z-index: 1; }
+.stack-print:nth-child(1) { z-index: 7; }
+.stack-print:nth-child(2) { z-index: 6; }
+.stack-print:nth-child(3) { z-index: 5; }
+.stack-print:nth-child(4) { z-index: 4; }
+.stack-print:nth-child(5) { z-index: 3; }
+.stack-print:nth-child(6) { z-index: 2; }
+.stack-print:nth-child(7) { z-index: 1; }
 
 /* The photo area inside the paper border: skeleton grey underneath, the
    photos on top of it. */
