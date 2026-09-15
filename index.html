@@ -60,15 +60,19 @@
       <div class="hero-image-space">
         <!-- Dual-World Photography Stack (Full, untouched photo) -->
         <div class="hero-photo-stack">
+          <!-- The Commercial photo is the first thing anyone sees, so the
+               browser fetches it first; the hidden Weddings one can wait. -->
           <img
             src="images/editorial_fashion.jpg"
             alt="Commercial Editorial Portfolio"
             class="hero-photo photo-commercial"
+            fetchpriority="high"
           />
           <img
             src="images/wedding_ephrussi.jpg"
             alt="Villa Ephrussi Wedding Monograph"
             class="hero-photo photo-weddings"
+            fetchpriority="low"
           />
         </div>
       </div>
@@ -129,8 +133,9 @@
         </div>
 
         <!-- Horizontal track. Each frame's .image-box-media plate holds one
-             photo per mode (the mode switch slides them) and sits on a loading
-             skeleton until its photo arrives.
+             photo per mode (the mode switch slides them), sits on a loading
+             skeleton until its photo arrives, and develops from blank paper
+             into full colour as it slides to the screen centre.
              PLACEHOLDER PHOTOS: the wikimedia.org ones are free-licensed
              stand-ins, credited in README.md. Swap in real work by changing
              the src; nothing else needs to change. -->
@@ -250,10 +255,16 @@
               <img class="mode-photo-commercial" src="images/minimal_interior.jpg" alt="" loading="lazy" decoding="async" />
               <img class="mode-photo-weddings" src="images/portrait_elena.jpg" alt="" loading="lazy" decoding="async" style="object-position: 50% 30%;" />
             </figure>
+            <!-- Jeffrey's own photo closes the stack. It is the same in both
+                 modes, so both slots point at it (the browser loads it once). -->
+            <figure class="stack-print">
+              <img class="mode-photo-commercial" src="images/jeffrey_hamilton.jpg" alt="" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/jeffrey_hamilton.jpg" alt="" loading="lazy" decoding="async" />
+            </figure>
           </div>
 
           <div class="stack-copy">
-            <p class="stack-counter"><span class="stack-counter-current">01</span> / 06</p>
+            <p class="stack-counter"><span class="stack-counter-current">01</span> / 07</p>
             <div class="stack-texts">
               <div class="stack-text is-current">
                 <div class="stack-mode">
@@ -324,6 +335,18 @@
                   <div class="for-weddings">
                     <h3 class="stack-title">Portraits</h3>
                     <p class="stack-blurb">A kiss under falling petals as the aisle erupts.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="stack-text">
+                <div class="stack-mode">
+                  <div class="for-commercial">
+                    <h3 class="stack-title">Jeffrey Hamilton</h3>
+                    <p class="stack-blurb">Part of the team behind this site.</p>
+                  </div>
+                  <div class="for-weddings">
+                    <h3 class="stack-title">Jeffrey Hamilton</h3>
+                    <p class="stack-blurb">Part of the team behind this site.</p>
                   </div>
                 </div>
               </div>
@@ -519,6 +542,16 @@
         }
       });
 
+      // DARKROOM DEVELOP (the scrolling row): the photo at the centre of the
+      // screen is in focus. Each frame's --develop (0 = blank paper, 1 = full
+      // photograph) follows its distance from the centre, in units of the
+      // frame's own width: full colour within DEVELOP_HOLD of the centre,
+      // fading back to paper over DEVELOP_FADE. style.css turns --develop into
+      // the paper overlay's and the caption's opacity.
+      const galleryFrames = Array.from(document.querySelectorAll('.image-box'));
+      const DEVELOP_HOLD = 0.25;
+      const DEVELOP_FADE = 0.9;
+
       // 5. PRINT STACK SECTION
       // The section pins while you scroll through a stack of photo prints. Its
       // scroll is a timeline: each print holds on top of the pile, then gets
@@ -593,7 +626,7 @@
 
       const scene = {
         zoomTop: 0, zoomRange: 1,
-        galleryTop: 0, galleryRange: 1, galleryTravel: 0,
+        galleryTop: 0, galleryRange: 1, galleryTravel: 0, frames: [],
         stackTop: 0, stackRange: 1, stackExit: 0,
         stackPoses: [], stackShowing: -1, stackCopy: '',
         viewportWidth: window.innerWidth
@@ -614,11 +647,17 @@
         if (horizontalSection && horizontalTrack) {
           scene.galleryTop = horizontalSection.getBoundingClientRect().top + scrollY;
           scene.galleryRange = Math.max(1, horizontalSection.offsetHeight - viewportHeight);
-          // The track's padding centres the first and last frames (style.css),
-          // so travelling scrollWidth - viewport runs from the first photo
-          // centred to the last photo centred.
+          // The track starts with its first photo centred and ends running out
+          // to the right edge (its padding, in style.css), so travelling
+          // scrollWidth - viewport covers exactly that.
           scene.galleryTravel = Math.max(0, horizontalTrack.scrollWidth - scene.viewportWidth);
         }
+
+        // offsetLeft ignores transforms, so these are each frame's resting
+        // positions no matter where the track currently sits.
+        scene.frames = galleryFrames.map(box => ({
+          box, center: box.offsetLeft + box.offsetWidth / 2, width: box.offsetWidth, develop: ''
+        }));
 
         if (stackSection && stackPile) {
           scene.stackTop = stackSection.getBoundingClientRect().top + scrollY;
@@ -641,10 +680,23 @@
           zoomBox.style.transform = `scale(${0.45 + progress * 0.55})`;
         }
 
-        // Horizontal gallery: a plain sideways slide
+        // Horizontal gallery: a sideways slide, with the centre photo in focus
         if (horizontalTrack) {
           const progress = clamp01((scrollY - scene.galleryTop) / scene.galleryRange);
-          horizontalTrack.style.transform = `translate3d(${(-progress * scene.galleryTravel).toFixed(2)}px, 0, 0)`;
+          const shift = progress * scene.galleryTravel;
+          horizontalTrack.style.transform = `translate3d(${(-shift).toFixed(2)}px, 0, 0)`;
+
+          const half = scene.viewportWidth / 2;
+          const still = motionStill.matches;
+          for (const frame of scene.frames) {
+            const fromCentre = Math.abs(frame.center - shift - half);
+            const t = 1 - clamp01((fromCentre - frame.width * DEVELOP_HOLD) / (frame.width * DEVELOP_FADE));
+            const develop = (still ? 1 : smoothstep(t)).toFixed(3);
+            if (develop !== frame.develop) {
+              frame.develop = develop;
+              frame.box.style.setProperty('--develop', develop);
+            }
+          }
         }
 
         // Print stack section
@@ -713,16 +765,31 @@
         measureScrollScenes();
         renderScrollScenes();
         updateNavbarContrast();
+      });
 
-        // Gallery photos lazy-load, but each frame's other-mode photo is
-        // parked outside the frame's clip until a mode switch slides it in, so
-        // the browser may not fetch it before the slide reveals it. Once the
-        // page has loaded, fetch them all in idle time instead.
-        const warmGallery = () => {
-          document.querySelectorAll('.image-box-media img[loading="lazy"], .stack-print img[loading="lazy"]').forEach(img => { img.loading = 'eager'; });
+      // PHOTO LOADING: photos load lazily, as they come near the screen, and
+      // show a skeleton until they arrive. Each frame's photo for the other
+      // mode is kept out of view until a mode switch brings it in, so on its
+      // own it would only start loading at the click. Instead, start those
+      // downloads the moment a visitor shows intent to switch (pointing at,
+      // focusing or touching the other tab), just before the click lands.
+      // Visitors who never switch never download the other mode's photos.
+      const prefetchedModes = new Set();
+
+      function prefetchMode(mode) {
+        if (prefetchedModes.has(mode)) return;
+        prefetchedModes.add(mode);
+        document.querySelectorAll(`.image-box-media .mode-photo-${mode}, .stack-print .mode-photo-${mode}`)
+          .forEach(img => { img.loading = 'eager'; });
+      }
+
+      toggleButtons.forEach(btn => {
+        const intent = () => {
+          if (btn.dataset.target !== body.getAttribute('data-mode')) prefetchMode(btn.dataset.target);
         };
-        if ('requestIdleCallback' in window) requestIdleCallback(warmGallery, { timeout: 3000 });
-        else setTimeout(warmGallery, 1500);
+        btn.addEventListener('pointerenter', intent);
+        btn.addEventListener('focus', intent);
+        btn.addEventListener('touchstart', intent, { passive: true });
       });
       measureScrollScenes();
       renderScrollScenes();
