@@ -13,6 +13,8 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 64px;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
 }
 
 /* ==========================================================================
@@ -172,7 +174,7 @@ body[data-mode="commercial"] .mode-text-weddings {
   text-decoration: none;
   font-family: var(--font-commercial);
   font-size: 0.74rem;
-  font-weight: 550;
+  font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-main);
@@ -194,7 +196,7 @@ body[data-mode="commercial"] .mode-text-weddings {
 .nav-item.nav-link.active {
   color: var(--text-main);
   opacity: 1;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .nav-item.toggle-btn::after,
@@ -1177,5 +1179,3 @@ body.subpage .site-header .nav-sep {
     max-width: 440px;
   }
 }
-
-
