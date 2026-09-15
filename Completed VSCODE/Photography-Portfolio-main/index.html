@@ -22,6 +22,24 @@
     </script>
   </head>
   <body data-mode="commercial">
+    <video
+      class="zoom-background-video"
+      src="CATCAT.mp4"
+      autoplay
+      muted
+      loop
+      playsinline
+      aria-hidden="true"
+    ></video>
+    <video
+      class="puppy-background-video"
+      src="Puppy.mp4"
+      autoplay
+      muted
+      loop
+      playsinline
+      aria-hidden="true"
+    ></video>
 
     <!-- ===================================================================
          STUDIO MINIMAL NAVBAR
@@ -60,19 +78,15 @@
       <div class="hero-image-space">
         <!-- Dual-World Photography Stack (Full, untouched photo) -->
         <div class="hero-photo-stack">
-          <!-- The Commercial photo is the first thing anyone sees, so the
-               browser fetches it first; the hidden Weddings one can wait. -->
           <img
             src="images/editorial_fashion.jpg"
             alt="Commercial Editorial Portfolio"
-            class="hero-photo photo-commercial"
-            fetchpriority="high"
+            class="hero-photo photo-commercial is-active"
           />
           <img
             src="images/wedding_ephrussi.jpg"
             alt="Villa Ephrussi Wedding Monograph"
             class="hero-photo photo-weddings"
-            fetchpriority="low"
           />
         </div>
       </div>
@@ -133,9 +147,8 @@
         </div>
 
         <!-- Horizontal track. Each frame's .image-box-media plate holds one
-             photo per mode (the mode switch slides them), sits on a loading
-             skeleton until its photo arrives, and develops from blank paper
-             into full colour as it slides to the screen centre.
+             photo per mode (the mode switch crossfades them), and each print
+             "develops" from blank paper as it slides to the screen centre.
              PLACEHOLDER PHOTOS: the wikimedia.org ones are free-licensed
              stand-ins, credited in README.md. Swap in real work by changing
              the src; nothing else needs to change. -->
@@ -205,153 +218,6 @@
               <span class="mode-text-commercial">EDITORIAL 06</span>
               <span class="mode-text-weddings">PORTRAITS 06</span>
             </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===================================================================
-         4. PRINT STACK SECTION
-         Pins while you scroll through a stack of photo prints: each stretch of
-         scrolling lifts the top print up and away, revealing the next one
-         underneath, and the text beside it fades to match. Driven by
-         renderScrollScenes() in the script below.
-         PLACEHOLDERS: the photos are the gallery's stand-ins (credited in
-         README.md) and each caption just describes its photo. Swap in real
-         work and copy by editing the src and text; nothing else changes.
-         =================================================================== -->
-    <section class="stack-section" id="prints">
-      <div class="sticky-viewport">
-        <div class="section-indicator">
-          <div class="mode-crossfade-stack">
-            <span class="mode-text-commercial">Scroll Effect: Print Stack (Commercial Highlights)</span>
-            <span class="mode-text-weddings">Scroll Effect: Print Stack (Wedding Highlights)</span>
-          </div>
-        </div>
-
-        <div class="stack-card">
-          <div class="stack-prints" aria-hidden="true">
-            <figure class="stack-print is-top">
-              <img class="mode-photo-commercial" src="images/architecture_pavilion.jpg" alt="" loading="lazy" decoding="async" />
-              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Villa_Balbianello_on_Como_Lake_8.jpg/1280px-Villa_Balbianello_on_Como_Lake_8.jpg" alt="" loading="lazy" decoding="async" />
-            </figure>
-            <figure class="stack-print">
-              <img class="mode-photo-commercial" src="images/editorial_fashion.jpg" alt="" loading="lazy" decoding="async" />
-              <img class="mode-photo-weddings" src="images/ceremony_estate.jpg" alt="" loading="lazy" decoding="async" />
-            </figure>
-            <figure class="stack-print">
-              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg/1280px-Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg" alt="" loading="lazy" decoding="async" />
-              <img class="mode-photo-weddings" src="images/wedding_ephrussi.jpg" alt="" loading="lazy" decoding="async" />
-            </figure>
-            <figure class="stack-print">
-              <img class="mode-photo-commercial" src="images/botanical_macro.jpg" alt="" loading="lazy" decoding="async" />
-              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Sweet_Embrace_%28163554735%29.jpeg/1280px-Sweet_Embrace_%28163554735%29.jpeg" alt="" loading="lazy" decoding="async" />
-            </figure>
-            <figure class="stack-print">
-              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Runway_show_pexels.jpg/1280px-Runway_show_pexels.jpg" alt="" loading="lazy" decoding="async" />
-              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Wedding_reception_tables_and_benches_%28Unsplash%29.jpg/1280px-Wedding_reception_tables_and_benches_%28Unsplash%29.jpg" alt="" loading="lazy" decoding="async" />
-            </figure>
-            <figure class="stack-print">
-              <img class="mode-photo-commercial" src="images/minimal_interior.jpg" alt="" loading="lazy" decoding="async" />
-              <img class="mode-photo-weddings" src="images/portrait_elena.jpg" alt="" loading="lazy" decoding="async" style="object-position: 50% 30%;" />
-            </figure>
-            <!-- Jeffrey's own photo closes the stack. It is the same in both
-                 modes, so both slots point at it (the browser loads it once). -->
-            <figure class="stack-print">
-              <img class="mode-photo-commercial" src="images/jeffrey_hamilton.jpg" alt="" loading="lazy" decoding="async" />
-              <img class="mode-photo-weddings" src="images/jeffrey_hamilton.jpg" alt="" loading="lazy" decoding="async" />
-            </figure>
-          </div>
-
-          <div class="stack-copy">
-            <p class="stack-counter"><span class="stack-counter-current">01</span> / 07</p>
-            <div class="stack-texts">
-              <div class="stack-text is-current">
-                <div class="stack-mode">
-                  <div class="for-commercial">
-                    <h3 class="stack-title">Campaign</h3>
-                    <p class="stack-blurb">A modern pavilion at dusk, glowing from the inside out.</p>
-                  </div>
-                  <div class="for-weddings">
-                    <h3 class="stack-title">Lake Como</h3>
-                    <p class="stack-blurb">Villa Balbianello rising from the edge of the water.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="stack-text">
-                <div class="stack-mode">
-                  <div class="for-commercial">
-                    <h3 class="stack-title">Lookbook</h3>
-                    <p class="stack-blurb">Bold colour, hard sun and a court-side backdrop.</p>
-                  </div>
-                  <div class="for-weddings">
-                    <h3 class="stack-title">The Ceremony</h3>
-                    <p class="stack-blurb">Blue sky, white balloons and the moment everyone lets go.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="stack-text">
-                <div class="stack-mode">
-                  <div class="for-commercial">
-                    <h3 class="stack-title">Brand Film</h3>
-                    <p class="stack-blurb">The camera up on the roof of the RV, chasing desert light.</p>
-                  </div>
-                  <div class="for-weddings">
-                    <h3 class="stack-title">Details &amp; Veil</h3>
-                    <p class="stack-blurb">The bouquet, the suit and the small things worth remembering.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="stack-text">
-                <div class="stack-mode">
-                  <div class="for-commercial">
-                    <h3 class="stack-title">Still Life</h3>
-                    <p class="stack-blurb">One product, one surface, nothing competing for attention.</p>
-                  </div>
-                  <div class="for-weddings">
-                    <h3 class="stack-title">Sunset Dance</h3>
-                    <p class="stack-blurb">Golden light under the trees, and one lift for the album.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="stack-text">
-                <div class="stack-mode">
-                  <div class="for-commercial">
-                    <h3 class="stack-title">Runway</h3>
-                    <p class="stack-blurb">The walk, the lights and the second the look lands.</p>
-                  </div>
-                  <div class="for-weddings">
-                    <h3 class="stack-title">Reception</h3>
-                    <p class="stack-blurb">Long tables, warm lights and room for everyone.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="stack-text">
-                <div class="stack-mode">
-                  <div class="for-commercial">
-                    <h3 class="stack-title">Editorial</h3>
-                    <p class="stack-blurb">A yellow chair in a quiet room, the story in the details.</p>
-                  </div>
-                  <div class="for-weddings">
-                    <h3 class="stack-title">Portraits</h3>
-                    <p class="stack-blurb">A kiss under falling petals as the aisle erupts.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="stack-text">
-                <div class="stack-mode">
-                  <div class="for-commercial">
-                    <h3 class="stack-title">Jeffrey Hamilton</h3>
-                    <p class="stack-blurb">Part of the team behind this site.</p>
-                  </div>
-                  <div class="for-weddings">
-                    <h3 class="stack-title">Jeffrey Hamilton</h3>
-                    <p class="stack-blurb">Part of the team behind this site.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="stack-skeleton" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
           </div>
         </div>
       </div>
@@ -485,8 +351,165 @@
         }
       }
 
+      // 2b. BUTTERY SLAT CURTAIN TRANSITION
+      // The outgoing frame drifts back while the incoming one is sliced into
+      // vertical slats that glide in — alternating up/down, staggered toward
+      // whichever tab you pressed — under a soft scale + blur bloom. Because
+      // every slat carries the full-bleed frame offset into its own column,
+      // the photograph re-assembles itself with no visible seams.
+      const heroStack = document.querySelector('.hero-photo-stack');
+      const heroPhotos = { commercial: photoCommercial, weddings: photoWeddings };
+
+      const SLAT_DURATION = 980;   // travel time of a single slat
+      const SLAT_STAGGER = 58;     // offset between neighbouring slats
+      const SLAT_EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const supportsWAAPI = typeof Element !== 'undefined' && !!Element.prototype.animate;
+
+      // Hand the stylesheet control of the photographs only once the script is
+      // actually running. Until this lands, the plain data-mode dissolve holds,
+      // so the hero is never blank if this file and style.css get out of step.
+      if (heroStack) heroStack.classList.add('curtain-ready');
+
+      let slatLayer = null;          // the live curtain, if one is running
+      let slatAnimations = [];       // every animation belonging to that curtain
+      let slatSettle = null;         // callback that lands the transition early
+      let slatRelayout = null;       // re-measures the curtain on resize
+
+      function slatCount() {
+        const w = window.innerWidth;
+        if (w < 640) return 4;
+        if (w < 1100) return 5;
+        return 6;
+      }
+
+      // Land whatever curtain is mid-flight instantly (fast repeated clicks,
+      // or a mode change arriving before the previous one finished).
+      function settleCurtain() {
+        if (slatSettle) slatSettle();
+      }
+
+      function swapBasePhoto(mode) {
+        Object.keys(heroPhotos).forEach(key => {
+          const img = heroPhotos[key];
+          if (!img) return;
+          img.classList.toggle('is-active', key === mode);
+          img.style.transform = '';
+          img.style.filter = '';
+        });
+      }
+
+      function runSlatCurtain(fromMode, toMode) {
+        const incoming = heroPhotos[toMode];
+        const outgoing = heroPhotos[fromMode];
+        if (!heroStack || !incoming) {
+          swapBasePhoto(toMode);
+          return;
+        }
+
+        const source = incoming.currentSrc || incoming.src;
+        const count = slatCount();
+        // Reveal sweeps toward the tab that was pressed: Commercial sits on the
+        // left of the navbar, Weddings on the right.
+        const sweepRight = toMode === 'weddings';
+        const total = SLAT_DURATION + SLAT_STAGGER * (count - 1);
+
+        const layer = document.createElement('div');
+        layer.className = 'hero-slats';
+        layer.setAttribute('aria-hidden', 'true');
+
+        const slats = [];
+        for (let i = 0; i < count; i++) {
+          const slat = document.createElement('div');
+          slat.className = 'hero-slat';
+          const inner = document.createElement('div');
+          inner.className = 'hero-slat-inner';
+          inner.style.backgroundImage = `url("${source}")`;
+          slat.appendChild(inner);
+          layer.appendChild(slat);
+          slats.push({ slat, inner });
+        }
+
+        // Integer edges tile the viewport exactly — no hairline gaps, no overlap.
+        function layoutSlats() {
+          const width = heroStack.clientWidth || window.innerWidth;
+          for (let i = 0; i < count; i++) {
+            const left = Math.round((i * width) / count);
+            const right = Math.round(((i + 1) * width) / count);
+            const { slat, inner } = slats[i];
+            slat.style.left = left + 'px';
+            slat.style.width = (right - left) + 'px';
+            inner.style.left = -left + 'px';
+            inner.style.width = width + 'px';
+          }
+        }
+
+        layoutSlats();
+        heroStack.appendChild(layer);
+
+        slatLayer = layer;
+        slatRelayout = layoutSlats;
+        slatAnimations = [];
+
+        // Everything below animates transform and opacity ONLY. Both are handled
+        // on the compositor, so cost does not grow with screen size — which
+        // matters here, where each slat carries a full-viewport image.
+        slats.forEach(({ slat, inner }, i) => {
+          const order = sweepRight ? i : count - 1 - i;
+          const delay = order * SLAT_STAGGER;
+          const fromY = i % 2 === 0 ? '-102%' : '102%';
+
+          // Travel plus a slight settle out of scale, in one transform.
+          slatAnimations.push(inner.animate([
+            { transform: `translate3d(0, ${fromY}, 0) scale(1.06)` },
+            { transform: 'translate3d(0, 0, 0) scale(1)' }
+          ], { duration: SLAT_DURATION, delay, easing: SLAT_EASE, fill: 'both' }));
+
+          // Each slat materialises as it travels, which softens the leading
+          // edge the way the old blur did but for free.
+          slatAnimations.push(slat.animate([
+            { opacity: 0 },
+            { opacity: 1 }
+          ], { duration: SLAT_DURATION * 0.45, delay, easing: 'cubic-bezier(0.33, 0.9, 0.4, 1)', fill: 'both' }));
+        });
+
+        // The frame being replaced drifts gently back as it leaves.
+        if (outgoing) {
+          slatAnimations.push(outgoing.animate([
+            { transform: 'scale(1)' },
+            { transform: 'scale(1.06)' }
+          ], { duration: total, easing: SLAT_EASE, fill: 'both' }));
+        }
+
+        let landed = false;
+        const land = () => {
+          if (landed) return;
+          landed = true;
+          clearTimeout(timer);
+          slatAnimations.forEach(anim => anim.cancel());
+          slatAnimations = [];
+          // At rest the curtain is pixel-identical to the incoming photograph,
+          // so handing over to the base layer is invisible.
+          swapBasePhoto(toMode);
+          if (layer.parentNode) layer.parentNode.removeChild(layer);
+          if (slatLayer === layer) {
+            slatLayer = null;
+            slatSettle = null;
+            slatRelayout = null;
+          }
+        };
+
+        slatSettle = land;
+        // Timer rather than the animation's finished promise: it still fires if
+        // the tab is backgrounded mid-transition, so we never strand the curtain.
+        const timer = setTimeout(land, total + 40);
+      }
+
       function setMode(mode) {
         if (body.getAttribute('data-mode') === mode) return;
+
+        const previous = body.getAttribute('data-mode') || 'commercial';
 
         body.setAttribute('data-mode', mode);
 
@@ -494,10 +517,17 @@
           btn.classList.toggle('active', btn.dataset.target === mode);
         });
 
+        settleCurtain();
+
+        // Skip the choreography when it cannot be seen or is not wanted.
+        const heroOffscreen = window.scrollY > window.innerHeight * 0.9;
+        if (!supportsWAAPI || reducedMotion.matches || heroOffscreen) {
+          swapBasePhoto(mode);
+        } else {
+          runSlatCurtain(previous, mode);
+        }
+
         updateNavbarContrast();
-        // Scroll scenes show mode-dependent photos (and their loading
-        // skeletons), so redraw them for the new mode.
-        onScroll();
       }
 
       toggleButtons.forEach(btn => {
@@ -522,114 +552,26 @@
       // frame — so scrolling never forces a layout recalculation.
       const zoomSection = document.querySelector('.frame-zoom-section');
       const zoomBox = document.querySelector('.zoom-frame-box');
+      const zoomVideo = document.querySelector('.zoom-background-video');
+      const puppyVideo = document.querySelector('.puppy-background-video');
       const horizontalSection = document.querySelector('.horizontal-scroll-section');
       const horizontalTrack = document.querySelector('.horizontal-track');
       const scrollHeader = document.getElementById('site-header');
-      const motionStill = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-      // SKELETON LOADING: every photo sits on a shimmering grey skeleton
-      // (style.css) until it has loaded. Tag each one as it arrives so the CSS
-      // can retire its skeleton, and redraw so the print stack section can
-      // drop its loading state. Photos already in the cache are tagged at once.
-      document.querySelectorAll('.hero-photo, .image-box-media img, .stack-print img').forEach(img => {
-        if (img.complete && img.naturalWidth > 0) {
-          img.classList.add('is-loaded');
-        } else {
-          img.addEventListener('load', () => {
-            img.classList.add('is-loaded');
-            onScroll();
-          }, { once: true });
-        }
-      });
-
-      // DARKROOM DEVELOP (the scrolling row): the photo at the centre of the
-      // screen is in focus. Each frame's --develop (0 = blank paper, 1 = full
-      // photograph) follows its distance from the centre, in units of the
-      // frame's own width: full colour within DEVELOP_HOLD of the centre,
-      // fading back to paper over DEVELOP_FADE. style.css turns --develop into
-      // the paper overlay's and the caption's opacity.
       const galleryFrames = Array.from(document.querySelectorAll('.image-box'));
+      const galleryStill = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      // Darkroom develop: how a print's --develop (0 = blank paper, 1 = full
+      // photograph) follows its distance from the centre of the screen, in
+      // units of the frame's own width. A print holds fully developed within
+      // DEVELOP_HOLD of the centre, then fades back to paper over DEVELOP_FADE.
       const DEVELOP_HOLD = 0.25;
       const DEVELOP_FADE = 0.9;
 
-      // 5. PRINT STACK SECTION
-      // The section pins while you scroll through a stack of photo prints. Its
-      // scroll is a timeline: each print holds on top of the pile, then gets
-      // lifted up and away (swinging aside and tilting as it goes) while the
-      // next print straightens and settles up from underneath. The text fades
-      // out with the old print and back in with the new one. The last print
-      // stays. Step lengths are relative shares of the scroll.
-      const stackSection = document.querySelector('.stack-section');
-      const stackCard = document.querySelector('.stack-card');
-      const stackPile = document.querySelector('.stack-prints');
-      const stackPrints = Array.from(document.querySelectorAll('.stack-print'));
-      const stackTexts = Array.from(document.querySelectorAll('.stack-text'));
-      const stackCounter = document.querySelector('.stack-counter-current');
-
-      const STACK_HOLD = 1;
-      const STACK_LIFT = 1;
-
-      // How each print lies in the pile before its turn: a small tilt and
-      // nudge, so the edges of the prints underneath peek out.
-      const PILE_TILT = [-3, 2.5, -1.5, 3, -2, 1.5]; // degrees
-      const PILE_NUDGE = [[-6, 8], [7, 5], [-4, 10], [6, 7], [-7, 6], [4, 9]]; // px [x, y]
-      const PILE_SCALE = 0.96;
-      // How the top print leaves: swings this far aside and tilts this much.
-      const LIFT_SWING = 40; // px
-      const LIFT_TILT = -8; // degrees
-
-      const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-      const easeInCubic = t => t * t * t;
-      const smoothstep = t => t * t * (3 - 2 * t);
-
-      function buildStackSteps(count) {
-        const steps = [];
-        for (let i = 0; i < count; i++) {
-          steps.push({ print: i, kind: 'hold', share: STACK_HOLD });
-          if (i < count - 1) steps.push({ print: i, kind: 'lift', share: STACK_LIFT });
-        }
-        const total = steps.reduce((sum, step) => sum + step.share, 0);
-        let at = 0;
-        for (const step of steps) {
-          step.start = at / total;
-          at += step.share;
-          step.end = at / total;
-        }
-        return steps;
-      }
-
-      const stackSteps = buildStackSteps(stackPrints.length);
-
-      // The pose (a CSS transform) for print k when print `top` is on top of
-      // the pile and `lift` (0..1) of the way through being lifted off it.
-      // Poses meet exactly at every step boundary, so nothing ever jumps.
-      function printPose(k, top, lift) {
-        if (k < top) {
-          // Already lifted away: parked where the lift left it, off-screen.
-          return `translate3d(${LIFT_SWING}px, ${(-scene.stackExit).toFixed(1)}px, 0) rotate(${LIFT_TILT}deg) scale(1.04)`;
-        }
-        if (k === top) {
-          // Picked up: it swings aside and tilts early, then accelerates away
-          // upward, the way you'd flick a print off the pile.
-          const swing = easeOutCubic(lift);
-          const away = easeInCubic(lift);
-          return `translate3d(${(LIFT_SWING * swing).toFixed(1)}px, ${(-scene.stackExit * away).toFixed(1)}px, 0) rotate(${(LIFT_TILT * swing).toFixed(2)}deg) scale(${(1 + 0.04 * swing).toFixed(3)})`;
-        }
-        // Still in the pile. The print directly underneath straightens and
-        // settles up into the top spot as the one above it is lifted.
-        const settle = k === top + 1 ? easeOutCubic(lift) : 0;
-        const keep = 1 - settle;
-        const tilt = PILE_TILT[k % PILE_TILT.length];
-        const [nx, ny] = PILE_NUDGE[k % PILE_NUDGE.length];
-        return `translate3d(${(nx * keep).toFixed(1)}px, ${(ny * keep).toFixed(1)}px, 0) rotate(${(tilt * keep).toFixed(2)}deg) scale(${(PILE_SCALE + (1 - PILE_SCALE) * settle).toFixed(3)})`;
-      }
-
       const scene = {
         zoomTop: 0, zoomRange: 1,
-        galleryTop: 0, galleryRange: 1, galleryTravel: 0, frames: [],
-        stackTop: 0, stackRange: 1, stackExit: 0,
-        stackPoses: [], stackShowing: -1, stackCopy: '',
-        viewportWidth: window.innerWidth
+        galleryTop: 0, galleryRange: 1, galleryTravel: 0,
+        viewportWidth: window.innerWidth,
+        frames: []
       };
 
       const clamp01 = value => (value < 0 ? 0 : value > 1 ? 1 : value);
@@ -647,9 +589,9 @@
         if (horizontalSection && horizontalTrack) {
           scene.galleryTop = horizontalSection.getBoundingClientRect().top + scrollY;
           scene.galleryRange = Math.max(1, horizontalSection.offsetHeight - viewportHeight);
-          // The track starts with its first photo centred and ends running out
-          // to the right edge (its padding, in style.css), so travelling
-          // scrollWidth - viewport covers exactly that.
+          // The track's padding centres the first and last frames (style.css),
+          // so travelling scrollWidth - viewport carries the scroll from the
+          // first print centred to the last print centred.
           scene.galleryTravel = Math.max(0, horizontalTrack.scrollWidth - scene.viewportWidth);
         }
 
@@ -658,16 +600,6 @@
         scene.frames = galleryFrames.map(box => ({
           box, center: box.offsetLeft + box.offsetWidth / 2, width: box.offsetWidth, develop: ''
         }));
-
-        if (stackSection && stackPile) {
-          scene.stackTop = stackSection.getBoundingClientRect().top + scrollY;
-          scene.stackRange = Math.max(1, stackSection.offsetHeight - viewportHeight);
-          // A lifted print travels a full screen plus half its own height (and
-          // a margin for its tilted corners), which clears the top of the
-          // screen wherever the pile sits.
-          scene.stackExit = viewportHeight + stackPile.offsetHeight / 2 + 40;
-          scene.stackPoses = []; // re-pose every print at the new size
-        }
       }
 
       function renderScrollScenes() {
@@ -677,70 +609,54 @@
         // Frame Zoom (scales from 0.45 up to 1.0)
         if (zoomBox) {
           const progress = clamp01((scrollY - scene.zoomTop) / scene.zoomRange);
-          zoomBox.style.transform = `scale(${0.45 + progress * 0.55})`;
+          const frameScale = 0.45 + progress * 0.55;
+          zoomBox.style.transform = `scale(${frameScale})`;
+          if (zoomVideo) {
+            const sectionBottom = scene.zoomTop + zoomSection.offsetHeight;
+            const videoIsBehindReel = scrollY < sectionBottom && scrollY + window.innerHeight > scene.zoomTop;
+            zoomVideo.classList.toggle('is-active', videoIsBehindReel);
+            const videoOffset = (0.5 - progress) * window.innerHeight * 0.08;
+            zoomVideo.style.transform = `translate3d(0, ${videoOffset}px, 0) scale(1.12)`;
+          }
+          if (puppyVideo) {
+            // Clip the single Puppy layer to the same scaled frame. Once the
+            // gallery begins, the clip opens fully so the video continues
+            // seamlessly as its background.
+            const clipInset = (1 - frameScale) * 50;
+            puppyVideo.style.clipPath = `inset(${clipInset}% ${clipInset}%)`;
+            puppyVideo.style.transform = `translate3d(0, ${(0.5 - progress) * window.innerHeight * 0.1}px, 0) scale(1.12)`;
+            const sectionBottom = scene.zoomTop + zoomSection.offsetHeight;
+            const videoIsBehindReel = scrollY < sectionBottom && scrollY + window.innerHeight > scene.zoomTop;
+            puppyVideo.classList.toggle('is-zoom-active', videoIsBehindReel);
+          }
         }
 
-        // Horizontal gallery: a sideways slide, with the centre photo in focus
+        // Horizontal gallery (slides the track leftwards)
         if (horizontalTrack) {
           const progress = clamp01((scrollY - scene.galleryTop) / scene.galleryRange);
+          if (puppyVideo) {
+            const inGallery = scrollY >= scene.galleryTop;
+            puppyVideo.classList.toggle('is-gallery-active', inGallery);
+            if (inGallery) puppyVideo.style.clipPath = 'inset(0)';
+          }
           const shift = progress * scene.galleryTravel;
-          horizontalTrack.style.transform = `translate3d(${(-shift).toFixed(2)}px, 0, 0)`;
+          horizontalTrack.style.transform = `translate3d(${-shift}px, 0, 0)`;
 
+          // Darkroom develop: prints near the screen edges are blank paper, and
+          // each one develops into the full photograph (its caption surfacing
+          // last) as it slides into the centre. style.css turns --develop into
+          // the paper overlay's and the caption's opacity.
           const half = scene.viewportWidth / 2;
-          const still = motionStill.matches;
+          const still = galleryStill.matches;
           for (const frame of scene.frames) {
             const fromCentre = Math.abs(frame.center - shift - half);
             const t = 1 - clamp01((fromCentre - frame.width * DEVELOP_HOLD) / (frame.width * DEVELOP_FADE));
-            const develop = (still ? 1 : smoothstep(t)).toFixed(3);
+            const develop = (still ? 1 : t * t * (3 - 2 * t)).toFixed(3); // smoothstep in and out of the hold
             if (develop !== frame.develop) {
               frame.develop = develop;
               frame.box.style.setProperty('--develop', develop);
             }
           }
-        }
-
-        // Print stack section
-        if (stackCard && stackSteps.length) {
-          const progress = clamp01((scrollY - scene.stackTop) / scene.stackRange);
-          const step = stackSteps.find(s => progress <= s.end) || stackSteps[stackSteps.length - 1];
-          const still = motionStill.matches;
-          let lift = step.kind === 'lift' ? clamp01((progress - step.start) / (step.end - step.start)) : 0;
-          if (still) lift = lift < 0.5 ? 0 : 1; // reduced motion: swap, don't fly
-
-          stackPrints.forEach((print, k) => {
-            const pose = printPose(k, step.print, lift);
-            if (pose !== scene.stackPoses[k]) {
-              scene.stackPoses[k] = pose;
-              print.style.transform = pose;
-              print.style.visibility = k < step.print ? 'hidden' : '';
-            }
-          });
-
-          // The text and counter switch halfway through a lift, while the text
-          // is fully faded: out over the first 45%, back in over the last 45%.
-          const showing = step.kind === 'lift' && lift >= 0.5 ? step.print + 1 : step.print;
-          let copy = 1;
-          if (step.kind === 'lift' && !still) {
-            copy = lift < 0.5 ? 1 - smoothstep(clamp01(lift / 0.45)) : smoothstep(clamp01((lift - 0.55) / 0.45));
-          }
-
-          if (showing !== scene.stackShowing) {
-            scene.stackShowing = showing;
-            stackTexts.forEach((el, i) => el.classList.toggle('is-current', i === showing));
-            stackPrints.forEach((el, i) => el.classList.toggle('is-top', i === showing));
-            if (stackCounter) stackCounter.textContent = String(showing + 1).padStart(2, '0');
-          }
-
-          const copyKey = copy.toFixed(3);
-          if (copyKey !== scene.stackCopy) {
-            scene.stackCopy = copyKey;
-            stackCard.style.setProperty('--copy', copyKey);
-          }
-
-          // Skeleton until the photo on show (this print, this mode) has loaded.
-          const mode = body.getAttribute('data-mode') === 'weddings' ? 'weddings' : 'commercial';
-          const photo = stackPrints[showing].querySelector(`.mode-photo-${mode}`);
-          stackCard.classList.toggle('is-loading', !!photo && !photo.classList.contains('is-loaded'));
         }
 
         // Navbar scroll enhancement (elevation shadow)
@@ -759,37 +675,24 @@
         measureScrollScenes();
         renderScrollScenes();
         updateNavbarContrast();
+        // Keep a mid-flight curtain tiled to the new viewport width.
+        if (slatRelayout) slatRelayout();
       });
       window.addEventListener('load', () => {
         window.scrollTo(0, 0);
         measureScrollScenes();
         renderScrollScenes();
         updateNavbarContrast();
-      });
 
-      // PHOTO LOADING: photos load lazily, as they come near the screen, and
-      // show a skeleton until they arrive. Each frame's photo for the other
-      // mode is kept out of view until a mode switch brings it in, so on its
-      // own it would only start loading at the click. Instead, start those
-      // downloads the moment a visitor shows intent to switch (pointing at,
-      // focusing or touching the other tab), just before the click lands.
-      // Visitors who never switch never download the other mode's photos.
-      const prefetchedModes = new Set();
-
-      function prefetchMode(mode) {
-        if (prefetchedModes.has(mode)) return;
-        prefetchedModes.add(mode);
-        document.querySelectorAll(`.image-box-media .mode-photo-${mode}, .stack-print .mode-photo-${mode}`)
-          .forEach(img => { img.loading = 'eager'; });
-      }
-
-      toggleButtons.forEach(btn => {
-        const intent = () => {
-          if (btn.dataset.target !== body.getAttribute('data-mode')) prefetchMode(btn.dataset.target);
+        // Gallery photos lazy-load, but each frame's other-mode photo is
+        // parked outside the frame's clip until a mode switch slides it in, so
+        // the browser may not fetch it before the slide reveals it. Once the
+        // page has loaded, fetch them all in idle time instead.
+        const warmGallery = () => {
+          document.querySelectorAll('.image-box-media img[loading="lazy"]').forEach(img => { img.loading = 'eager'; });
         };
-        btn.addEventListener('pointerenter', intent);
-        btn.addEventListener('focus', intent);
-        btn.addEventListener('touchstart', intent, { passive: true });
+        if ('requestIdleCallback' in window) requestIdleCallback(warmGallery, { timeout: 3000 });
+        else setTimeout(warmGallery, 1500);
       });
       measureScrollScenes();
       renderScrollScenes();
