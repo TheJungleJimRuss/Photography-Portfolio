@@ -380,86 +380,38 @@ body[data-mode="commercial"] .mode-text-weddings {
   grid-template-areas: "stack";
 }
 
-.hero-photo-stack > .hero-photo {
+.hero-photo-stack > * {
   grid-area: stack;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  transform-origin: center center;
+  transition: opacity 0.75s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+body[data-mode="commercial"] .hero-photo-stack .photo-commercial {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+body[data-mode="commercial"] .hero-photo-stack .photo-weddings {
   opacity: 0;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* BASELINE (no script, script blocked, or an older index.html):
-   the photograph is chosen by data-mode alone and simply dissolves.
-   This must stay standalone so the stylesheet never depends on markup or
-   JavaScript it was not shipped alongside.
-   The :not(.curtain-ready) guard is load-bearing: without it these rules
-   outrank the curtain's own (they carry an extra element in the selector), so
-   data-mode would snap the base photo across the moment you click and the
-   slats would slide the new picture over itself. */
-body[data-mode="commercial"] .hero-photo-stack:not(.curtain-ready) > .photo-commercial,
-body[data-mode="weddings"] .hero-photo-stack:not(.curtain-ready) > .photo-weddings {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.hero-photo-stack:not(.curtain-ready) > .hero-photo {
-  transition: opacity 0.75s ease;
-}
-
-/* ENHANCED: once the curtain script has taken over, it decides which photo is
-   showing, because the swap has to land underneath the slats rather than
-   follow data-mode directly. The outgoing photo therefore stays put until the
-   slats have fully covered it. */
-.hero-photo-stack.curtain-ready > .hero-photo.is-active {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* --------------------------------------------------------------------------
-   BUTTERY SLAT CURTAIN
-   The incoming photograph is sliced into vertical slats. Each slat carries the
-   full-bleed frame offset into place, so as they glide in (alternating up and
-   down, staggered toward the tab you picked) the picture re-assembles itself
-   seamlessly. The whole curtain settles out of a soft scale + blur bloom.
-   -------------------------------------------------------------------------- */
-.hero-slats {
-  grid-area: stack;
-  position: relative;
-  width: 100%;
-  height: 100%;
-  z-index: 2;
+  transform: scale(1.04);
   pointer-events: none;
 }
 
-.hero-slat {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  overflow: hidden;
-  will-change: opacity;
-  backface-visibility: hidden;
+body[data-mode="weddings"] .hero-photo-stack .photo-commercial {
+  opacity: 0;
+  transform: scale(1.04);
+  pointer-events: none;
 }
 
-.hero-slat-inner {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center center;
-  will-change: transform;
-  backface-visibility: hidden;
-}
-
-/* Motion-sensitive visitors get the quiet dissolve instead. */
-@media (prefers-reduced-motion: reduce) {
-  .hero-photo-stack > .hero-photo {
-    transition: opacity 0.5s ease;
-  }
+body[data-mode="weddings"] .hero-photo-stack .photo-weddings {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
 }
 
 /* Hero Title Box: Dual-Wipe Typography & Strictly Columnar Layout */
@@ -702,9 +654,8 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
   display: flex;
   align-items: center;
   gap: 2.5rem;
-  /* Half a screen minus half a frame on each side, so the first print starts
-     at the centre of the screen and the last one finishes there: every print
-     gets its fully developed moment. */
+  /* Half a screen minus half a frame on each side, so the row starts with its
+     first photo centred and finishes with its last photo centred. */
   padding-left: calc(50vw - var(--frame-width) / 2);
   padding-right: calc(50vw - var(--frame-width) / 2);
   width: max-content;
@@ -712,14 +663,11 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
 }
 
 .image-box {
-  /* Darkroom develop amount: 0 = blank paper, 1 = full photograph. Written
-     per frame by renderScrollScenes in index.html; stays 1 without JS. */
-  --develop: 1;
   position: relative;
   overflow: hidden;
   width: var(--frame-width);
   height: clamp(380px, 55vh, 600px);
-  background-color: var(--bg-box);
+  background-color: var(--bg-box); /* the loading skeleton's grey */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -739,24 +687,19 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
 }
 
 /* PHOTO PLATE
-   Holds the frame's photographs, edge to edge. To use a real photograph,
+   Holds the frame's photographs, edge to edge. Transparent, so the frame's
+   loading skeleton shows until a photo arrives. To use a real photograph,
    change the src of the <img> elements inside it. */
 .image-box-media {
   position: absolute;
   inset: 0;
-  background-color: var(--bg-box);
-  /* Placeholder texture, shown until the photographs load. */
-  background-image:
-    radial-gradient(ellipse 55% 65% at 38% 42%, rgba(255, 255, 255, 0.6), transparent 70%),
-    repeating-linear-gradient(115deg, transparent 0 26px, var(--border-subtle) 26px 27px);
-  transition: background-color 0.6s ease;
 }
 
 /* MODE PUSH
    Each plate carries one photo per mode. On a mode switch the incoming photo
    pushes in from its own side while the outgoing one leaves the other way:
    Commercial is parked to the left and Weddings to the right, matching the nav
-   tabs and the hero curtain. Both zoom-settle between 1.12 and 1 on the way.
+   tabs. Both zoom-settle between 1.12 and 1 on the way.
    The 106% offset is tied to that 1.12 scale (6% overhang per side): it parks
    each photo exactly at the frame edge, and keeps the incoming and outgoing
    edges touching for the whole slide, with no gap and no peeking sliver.
@@ -826,29 +769,305 @@ body[data-mode="commercial"] .image-box .mode-crossfade-stack > * {
   pointer-events: none;
 }
 
-/* DARKROOM DEVELOP
-   Undeveloped paper laid over each print. Its opacity follows --develop, so a
-   print reads as a faint blank sheet near the screen edges and develops into
-   the full photograph at the centre. It uses the page colour, so undeveloped
-   prints sit quietly on the page in both modes. Opacity only: cheap to animate. */
-.image-box-media::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background-color: var(--bg-page);
-  opacity: calc((1 - var(--develop)) * 0.85);
-  will-change: opacity;
-  pointer-events: none;
-  transition: background-color 0.6s ease;
-}
-
-/* Captions stay fixed to the frame and surface late in the develop, once the
-   picture underneath is mostly there: hidden below 0.375, full at 1. */
+/* Captions stay fixed to the frame, above the plate. */
 .image-box > .mode-crossfade-stack {
   position: relative;
   z-index: 1;
-  opacity: clamp(0, calc(var(--develop) * 1.6 - 0.6), 1);
+}
+
+/* ==========================================================================
+   4. PRINT STACK SECTION
+   Pins while you scroll through a stack of photo prints. Each stretch of
+   scrolling lifts the top print up and away (tilting as it goes) while the
+   next print settles up from the pile beneath it, and the text beside it fades
+   to match. Every print's pose is an inline transform written by
+   renderScrollScenes in index.html; without JS you simply see the top print.
+   ========================================================================== */
+.stack-section {
+  position: relative;
+  /* One screen to pin the section, plus ~70vh of scrolling per print (6). */
+  height: calc(100vh + 6 * 70vh);
+  border-bottom: 2px solid var(--border-subtle);
+  transition: border-color 0.6s ease;
+}
+
+.stack-card {
+  --copy: 1; /* the current text's opacity, written by renderScrollScenes */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2rem, 6vw, 5rem);
+  width: min(1000px, 88vw);
+}
+
+/* The spot on the table where the pile sits: exactly one print in size. */
+.stack-prints {
+  position: relative;
+  flex: 0 0 auto;
+  width: min(clamp(240px, 30vw, 420px), 54vh);
+  aspect-ratio: 4 / 5;
+}
+
+/* A print: the photo inside a white paper border, with a soft shadow. */
+.stack-print {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  overflow: hidden;
+  background-color: #ffffff;
+  border-radius: 2px;
+  box-shadow: 0 22px 44px -18px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.12);
+  transform-origin: 50% 60%;
+  will-change: transform;
+  transition: background-color 0.6s ease;
+}
+
+body[data-mode="weddings"] .stack-print {
+  background-color: #fffcf6; /* warm paper in Weddings mode */
+}
+
+/* The first print lies on top of the pile, the last at the bottom. In CSS so
+   the order is right even before (or without) the script. */
+.stack-print:nth-child(1) { z-index: 6; }
+.stack-print:nth-child(2) { z-index: 5; }
+.stack-print:nth-child(3) { z-index: 4; }
+.stack-print:nth-child(4) { z-index: 3; }
+.stack-print:nth-child(5) { z-index: 2; }
+.stack-print:nth-child(6) { z-index: 1; }
+
+/* The photo area inside the paper border: skeleton grey underneath, the
+   photos on top of it. */
+.stack-print::before {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  background-color: var(--bg-box);
+  transition: background-color 0.6s ease;
+}
+
+.stack-print img {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: block;
+  width: calc(100% - 20px);
+  height: calc(100% - 20px);
+  object-fit: cover;
+  transition: opacity 0.6s ease;
+}
+
+body[data-mode="commercial"] .stack-print .mode-photo-weddings,
+body[data-mode="weddings"] .stack-print .mode-photo-commercial {
+  opacity: 0;
+}
+
+.stack-copy {
+  position: relative;
+  flex: 1 1 0;
+  max-width: 380px;
+  min-height: 12rem; /* keeps the height steady while the texts swap */
+}
+
+.stack-counter {
+  margin-bottom: 1.1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.6s ease;
+}
+
+/* Every print's text shares one grid cell; only the current one shows. */
+.stack-texts {
+  display: grid;
+  grid-template-areas: "text";
+}
+
+.stack-text {
+  grid-area: text;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+}
+
+/* The text changes and fades while the new print comes in: it fades out as
+   the top print is lifted and back in as the next one settles. */
+.stack-text.is-current {
+  opacity: var(--copy);
+  transform: translateY(calc((1 - var(--copy)) * 10px));
+  pointer-events: auto;
+}
+
+/* Each text has a Commercial and a Weddings version, crossfading on a mode
+   switch. */
+.stack-mode {
+  display: grid;
+  grid-template-areas: "mode";
+}
+
+.stack-mode > * {
+  grid-area: mode;
+  transition: opacity 0.5s ease, visibility 0.5s;
+}
+
+body[data-mode="commercial"] .stack-mode > .for-weddings,
+body[data-mode="weddings"] .stack-mode > .for-commercial {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.stack-title {
+  font-family: var(--font-commercial);
+  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+  font-weight: 300;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--text-main);
+  transition: color 0.6s ease;
+}
+
+.for-weddings .stack-title {
+  font-family: var(--font-weddings);
+  font-size: clamp(2rem, 3.8vw, 3.1rem);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.stack-blurb {
+  margin-top: 0.9rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  transition: color 0.6s ease;
+}
+
+@media (max-width: 720px) {
+  .stack-card {
+    flex-direction: column;
+    gap: 1.5rem;
+    text-align: center;
+  }
+
+  .stack-prints {
+    width: min(64vw, 38vh);
+  }
+
+  .stack-copy {
+    flex: 0 0 auto;
+    width: 86vw;
+    min-height: 9rem;
+  }
+}
+
+/* ==========================================================================
+   SKELETON LOADING
+   Until a photograph has loaded, its space shows a grey block with a soft
+   highlight sweeping across it (the YouTube-style placeholder). In the print
+   stack section the counter and text wait behind grey bars too. index.html
+   tags each photo .is-loaded as it arrives, which retires its skeleton. The
+   sweep animates transform only, so it runs on the compositor.
+   ========================================================================== */
+@keyframes skeleton-sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* Gallery frames and the hero: the sweep sits underneath the photos (first in
+   paint order), so a loaded photo simply covers it. */
+.image-box::before,
+.hero-image-space::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.5) 50%, transparent 80%);
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* The photo for the current mode has loaded: stop the sweep. Switching to a
+   mode whose photo is still loading brings it back. */
+body[data-mode="commercial"] .image-box:has(.mode-photo-commercial.is-loaded)::before,
+body[data-mode="weddings"] .image-box:has(.mode-photo-weddings.is-loaded)::before,
+body[data-mode="commercial"] .hero-image-space:has(.photo-commercial.is-loaded)::before,
+body[data-mode="weddings"] .hero-image-space:has(.photo-weddings.is-loaded)::before {
+  opacity: 0;
+  animation: none;
+}
+
+/* Print stack: while the print on top is still loading (.is-loading on the
+   card, .is-top on the print, both set by index.html) a highlight sweeps
+   across its grey photo area, and grey bars stand in for the counter and
+   text, like a YouTube card. */
+.stack-print::after {
+  content: '';
+  position: absolute;
+  inset: 10px;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.5) 50%, transparent 80%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stack-card.is-loading .stack-print.is-top::after {
+  opacity: 1;
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+
+.stack-skeleton {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stack-card.is-loading .stack-skeleton {
+  display: flex;
+}
+
+.stack-card.is-loading .stack-counter,
+.stack-card.is-loading .stack-texts {
+  visibility: hidden;
+}
+
+.stack-skeleton span {
+  position: relative;
+  display: block;
+  height: 0.9rem;
+  overflow: hidden;
+  border-radius: 4px;
+  background-color: var(--bg-box);
+}
+
+.stack-skeleton span:nth-child(1) { width: 22%; height: 0.7rem; margin-bottom: 0.5rem; } /* counter */
+.stack-skeleton span:nth-child(2) { width: 72%; height: 2.2rem; margin-bottom: 0.4rem; } /* title */
+.stack-skeleton span:nth-child(3) { width: 100%; }
+.stack-skeleton span:nth-child(4) { width: 64%; }
+
+.stack-skeleton span::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.55) 50%, transparent 80%);
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+
+@media (max-width: 720px) {
+  .stack-skeleton {
+    align-items: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .image-box::before,
+  .hero-image-space::before,
+  .stack-print::after,
+  .stack-skeleton span::after {
+    animation: none;
+    background: none;
+  }
 }
 
 /* ==========================================================================
