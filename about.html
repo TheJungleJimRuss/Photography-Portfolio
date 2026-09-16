@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="subpage-active">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -19,12 +19,12 @@
     <header class="site-header solid" id="site-header">
       <nav class="site-nav" aria-label="Main Navigation">
         <!-- Brand Link -->
-        <div class="nav-group nav-group-left">
+        <div class="nav-group nav-group-left" id="nav-group-left">
           <a href="index.html" class="nav-item nav-brand" id="brand-link">Glow Creative .Co</a>
         </div>
 
         <!-- Section Navigation Tabs -->
-        <div class="nav-group nav-group-right">
+        <div class="nav-group nav-group-right" id="nav-group-right">
           <a href="index.html" class="nav-item nav-link" id="nav-portfolio">Portfolio</a>
           <span class="nav-sep" aria-hidden="true">·</span>
           <a href="about.html" class="nav-item nav-link active" id="nav-about">About</a>
@@ -35,62 +35,67 @@
     </header>
 
     <!-- ===================================================================
-         ABOUT PAGE — BASE TEMPLATE
+         ABOUT PAGE — BASE TEMPLATE (IN WHEEL STAGE)
          =================================================================== -->
-    <div class="subpage-container" id="about-container">
-      <main class="subpage-main" id="about-main">
-        <header class="subpage-header" id="about-header">
-          <h1 class="subpage-title" id="about-title">About</h1>
-          <p class="subpage-subtitle">[Your Name] &middot; [Photographer &amp; Director / Your Title]</p>
-        </header>
+    <div id="page-stage">
+      <div id="page-content" class="page-panel" data-page="about">
+        <div class="subpage-container" id="about-container">
+          <main class="subpage-main" id="about-main">
+            <header class="subpage-header" id="about-header">
+              <h1 class="subpage-title" id="about-title">About</h1>
+              <p class="subpage-subtitle">[Your Name] &middot; [Photographer &amp; Director / Your Title]</p>
+            </header>
 
-        <!-- Base 2-Column Editorial Framework -->
-        <div class="about-grid" id="about-content-box">
-          
-          <!-- Visual Column: Portrait Placeholder -->
-          <div class="about-image-col">
-            <img
-              src="images/portrait_elena.jpg"
-              alt="[Photographer Portrait Placeholder]"
-              class="about-portrait"
-              loading="eager"
-            />
-          </div>
+            <!-- Base 2-Column Editorial Framework -->
+            <div class="about-grid" id="about-content-box">
+              
+              <!-- Visual Column: Portrait Placeholder -->
+              <div class="about-image-col">
+                <img
+                  src="images/portrait_elena.jpg"
+                  alt="[Photographer Portrait Placeholder]"
+                  class="about-portrait"
+                  loading="eager"
+                />
+              </div>
 
-          <!-- Story & Practice Column -->
-          <div class="about-text-col">
-            <h2 class="about-heading">
-              [Introductory headline: Hi, I&rsquo;m (Your Name) &mdash; a commercial photographer and director based in (Your City).]
-            </h2>
+              <!-- Story & Practice Column -->
+              <div class="about-text-col">
+                <h2 class="about-heading">
+                  [Introductory headline: Hi, I&rsquo;m (Your Name) &mdash; a commercial photographer and director based in (Your City).]
+                </h2>
 
-            <div class="about-bio">
-              <p>
-                [First bio paragraph: Describe your background, primary focus such as commercial advertising, editorial campaigns, brand cinema, or spatial photography, and your visual style.]
-              </p>
-              <p>
-                [Second bio paragraph: Describe your other areas of work such as weddings, portraits, or personal archives, your camera mediums (analog film, digital), and your approach to working with clients.]
-              </p>
+                <div class="about-bio">
+                  <p>
+                    [First bio paragraph: Describe your background, primary focus such as commercial advertising, editorial campaigns, brand cinema, or spatial photography, and your visual style.]
+                  </p>
+                  <p>
+                    [Second bio paragraph: Describe your other areas of work such as weddings, portraits, or personal archives, your camera mediums (analog film, digital), and your approach to working with clients.]
+                  </p>
+                </div>
+
+                <div class="about-services">
+                  <h3 class="about-section-label">[What I Do / Selected Disciplines]</h3>
+                  <ul class="about-services-list">
+                    <li>[Discipline 01 &mdash; e.g. Commercial Campaigns &amp; Brand Storytelling]</li>
+                    <li>[Discipline 02 &mdash; e.g. Directed Cinema &amp; Short Form Motion]</li>
+                    <li>[Discipline 03 &mdash; e.g. Architecture, Interior &amp; Spatial Photography]</li>
+                    <li>[Discipline 04 &mdash; e.g. Private Weddings, Portraits &amp; Heirloom Monographs]</li>
+                  </ul>
+                </div>
+
+                <div class="about-contact-action">
+                  <a href="contact.html" class="simple-link-btn">[Get in Touch &rarr;]</a>
+                </div>
+              </div>
+
             </div>
-
-            <div class="about-services">
-              <h3 class="about-section-label">[What I Do / Selected Disciplines]</h3>
-              <ul class="about-services-list">
-                <li>[Discipline 01 &mdash; e.g. Commercial Campaigns &amp; Brand Storytelling]</li>
-                <li>[Discipline 02 &mdash; e.g. Directed Cinema &amp; Short Form Motion]</li>
-                <li>[Discipline 03 &mdash; e.g. Architecture, Interior &amp; Spatial Photography]</li>
-                <li>[Discipline 04 &mdash; e.g. Private Weddings, Portraits &amp; Heirloom Monographs]</li>
-              </ul>
-            </div>
-
-            <div class="about-contact-action">
-              <a href="contact.html" class="simple-link-btn">[Get in Touch &rarr;]</a>
-            </div>
-          </div>
-
+          </main>
         </div>
-      </main>
-
+      </div>
     </div>
 
+    <!-- Rotational Wheel Page Transitions Router -->
+    <script type="module" src="transitions.js"></script>
   </body>
 </html>

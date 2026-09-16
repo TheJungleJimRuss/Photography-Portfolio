@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="subpage-active">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -19,12 +19,12 @@
     <header class="site-header solid" id="site-header">
       <nav class="site-nav" aria-label="Main Navigation">
         <!-- Brand Link -->
-        <div class="nav-group nav-group-left">
+        <div class="nav-group nav-group-left" id="nav-group-left">
           <a href="index.html" class="nav-item nav-brand" id="brand-link">Glow Creative .Co</a>
         </div>
 
         <!-- Section Navigation Tabs -->
-        <div class="nav-group nav-group-right">
+        <div class="nav-group nav-group-right" id="nav-group-right">
           <a href="index.html" class="nav-item nav-link" id="nav-portfolio">Portfolio</a>
           <span class="nav-sep" aria-hidden="true">·</span>
           <a href="about.html" class="nav-item nav-link" id="nav-about">About</a>
@@ -35,65 +35,70 @@
     </header>
 
     <!-- ===================================================================
-         CONTACT PAGE — BASE TEMPLATE
+         CONTACT PAGE — BASE TEMPLATE (IN WHEEL STAGE)
          =================================================================== -->
-    <div class="subpage-container" id="contact-container">
-      <main class="subpage-main" id="contact-main">
-        <header class="subpage-header" id="contact-header">
-          <h1 class="subpage-title" id="contact-title">Contact</h1>
-          <p class="subpage-subtitle">[Commissions &amp; Inquiries]</p>
-        </header>
+    <div id="page-stage">
+      <div id="page-content" class="page-panel" data-page="contact">
+        <div class="subpage-container" id="contact-container">
+          <main class="subpage-main" id="contact-main">
+            <header class="subpage-header" id="contact-header">
+              <h1 class="subpage-title" id="contact-title">Contact</h1>
+              <p class="subpage-subtitle">[Commissions &amp; Inquiries]</p>
+            </header>
 
-        <!-- Base Contact Information Grid -->
-        <div class="contact-grid" id="contact-content-box">
-          
-          <!-- Column 1: Direct Reach -->
-          <div class="contact-info-col">
-            <h2 class="contact-heading">[Get in Touch]</h2>
-            <p class="contact-text">
-              [Brief note on project types, availability, or invitation to reach out with project details or dates.]
-            </p>
+            <!-- Base Contact Information Grid -->
+            <div class="contact-grid" id="contact-content-box">
+              
+              <!-- Column 1: Direct Reach -->
+              <div class="contact-info-col">
+                <h2 class="contact-heading">[Get in Touch]</h2>
+                <p class="contact-text">
+                  [Brief note on project types, availability, or invitation to reach out with project details or dates.]
+                </p>
 
-            <div class="contact-detail-block">
-              <span class="contact-label">[Commercial &amp; Motion Inquiries]</span>
-              <a href="mailto:email@example.com" class="contact-value-link">[your-commercial-email@example.com]</a>
-            </div>
+                <div class="contact-detail-block">
+                  <span class="contact-label">[Commercial &amp; Motion Inquiries]</span>
+                  <a href="mailto:email@example.com" class="contact-value-link">[your-commercial-email@example.com]</a>
+                </div>
 
-            <div class="contact-detail-block">
-              <span class="contact-label">[Weddings &amp; Personal Inquiries]</span>
-              <a href="mailto:email@example.com" class="contact-value-link">[your-personal-email@example.com]</a>
-            </div>
+                <div class="contact-detail-block">
+                  <span class="contact-label">[Weddings &amp; Personal Inquiries]</span>
+                  <a href="mailto:email@example.com" class="contact-value-link">[your-personal-email@example.com]</a>
+                </div>
 
-            <div class="contact-detail-block">
-              <span class="contact-label">[Direct Phone]</span>
-              <a href="tel:+10000000000" class="contact-value-link">[+1 (000) 000-0000]</a>
-            </div>
-          </div>
-
-          <!-- Column 2: Location, Travel & Social -->
-          <div class="contact-info-col">
-            <h2 class="contact-heading">[Location &amp; Elsewhere]</h2>
-
-            <div class="contact-detail-block">
-              <span class="contact-label">[Home Base]</span>
-              <p class="contact-value">[City, State / Region]</p>
-              <p class="contact-subtext">[Available worldwide for travel and destination assignments]</p>
-            </div>
-
-            <div class="contact-detail-block">
-              <span class="contact-label">[Work &amp; Archives]</span>
-              <div class="contact-links">
-                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="contact-social-link">[Instagram ↗]</a>
-                <a href="https://vimeo.com" target="_blank" rel="noopener noreferrer" class="contact-social-link">[Vimeo ↗]</a>
-                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="contact-social-link">[LinkedIn ↗]</a>
+                <div class="contact-detail-block">
+                  <span class="contact-label">[Direct Phone]</span>
+                  <a href="tel:+10000000000" class="contact-value-link">[+1 (000) 000-0000]</a>
+                </div>
               </div>
+
+              <!-- Column 2: Location, Travel & Social -->
+              <div class="contact-info-col">
+                <h2 class="contact-heading">[Location &amp; Elsewhere]</h2>
+
+                <div class="contact-detail-block">
+                  <span class="contact-label">[Home Base]</span>
+                  <p class="contact-value">[City, State / Region]</p>
+                  <p class="contact-subtext">[Available worldwide for travel and destination assignments]</p>
+                </div>
+
+                <div class="contact-detail-block">
+                  <span class="contact-label">[Work &amp; Archives]</span>
+                  <div class="contact-links">
+                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="contact-social-link">[Instagram ↗]</a>
+                    <a href="https://vimeo.com" target="_blank" rel="noopener noreferrer" class="contact-social-link">[Vimeo ↗]</a>
+                    <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="contact-social-link">[LinkedIn ↗]</a>
+                  </div>
+                </div>
+              </div>
+
             </div>
-          </div>
-
+          </main>
         </div>
-      </main>
-
+      </div>
     </div>
 
+    <!-- Rotational Wheel Page Transitions Router -->
+    <script type="module" src="transitions.js"></script>
   </body>
 </html>
