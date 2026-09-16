@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-mode="commercial">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -31,7 +31,7 @@
     <header class="site-header" id="site-header">
       <nav class="site-nav" aria-label="Main Navigation">
         <!-- Dual World Mode Switcher Tabs -->
-        <div class="nav-group nav-group-left">
+        <div class="nav-group nav-group-left" id="nav-group-left">
           <button type="button" class="nav-item toggle-btn active" data-target="commercial">
             Commercial
           </button>
@@ -42,7 +42,7 @@
         </div>
 
         <!-- Section Navigation Tabs -->
-        <div class="nav-group nav-group-right">
+        <div class="nav-group nav-group-right" id="nav-group-right">
           <a href="index.html" class="nav-item nav-link active" id="nav-portfolio">Portfolio</a>
           <span class="nav-sep" aria-hidden="true">·</span>
           <a href="about.html" class="nav-item nav-link" id="nav-about">About</a>
@@ -52,10 +52,12 @@
       </nav>
     </header>
 
-    <!-- ===================================================================
-         1. HERO SECTION (Full Viewport: 100vw x 100vh)
-         =================================================================== -->
-    <header class="hero-container" id="hero">
+    <div id="page-stage">
+      <div id="page-content" class="page-panel" data-page="portfolio">
+        <!-- ===================================================================
+             1. HERO SECTION (Full Viewport: 100vw x 100vh)
+             =================================================================== -->
+        <header class="hero-container" id="hero">
       <!-- Space for background image taking up entire viewport -->
       <div class="hero-image-space">
         <!-- Dual-World Photography Stack (Full, untouched photo) -->
@@ -364,436 +366,18 @@
         <p class="mode-text-weddings">Private Ceremony Commissions & Monograph Archives — weddings@glowcreative.co</p>
       </div>
     </footer>
+      </div>
+    </div>
 
 
-    <!-- ===================================================================
-         INTERACTIVE LOGIC: TOGGLE SWITCH + SCROLL EFFECTS + ADAPTIVE CONTRAST
-         =================================================================== -->
-    <script>
-      // 1. DUAL-WORLD MODE TOGGLE LOGIC
-      const toggleButtons = document.querySelectorAll('.toggle-btn');
-      const body = document.body;
-      const siteHeader = document.getElementById('site-header');
-      const navGroupLeft = document.querySelector('.nav-group-left');
-      const navGroupRight = document.querySelector('.nav-group-right');
-      const photoCommercial = document.querySelector('.photo-commercial');
-      const photoWeddings = document.querySelector('.photo-weddings');
+    <!-- Editorial Floating Overlay Scrollbar (100% transparent track) -->
+    <div class="floating-scrollbar" id="floating-scrollbar" aria-hidden="true">
+      <div class="floating-scrollbar-track">
+        <div class="floating-scrollbar-thumb"></div>
+      </div>
+    </div>
 
-      // 2. ADAPTIVE BACKGROUND LUMINANCE DETECTION
-      // Samples the top section of the active photograph where the navbar floats.
-      // Automatically inverts text: light text on dark imagery, dark text on light imagery.
-      const luminanceCache = new Map();
-
-      function updateNavbarContrast() {
-        const mode = body.getAttribute('data-mode') || 'commercial';
-        const activeImg = mode === 'weddings' ? photoWeddings : photoCommercial;
-
-        // Sensible instant defaults while image loads
-        if (mode === 'commercial') {
-          // Commercial studio image is high-key light -> dark text
-          if (siteHeader) siteHeader.setAttribute('data-nav-tone', 'dark');
-          if (navGroupLeft) navGroupLeft.setAttribute('data-tone', 'dark');
-          if (navGroupRight) navGroupRight.setAttribute('data-tone', 'dark');
-        } else {
-          // Weddings Villa Ephrussi has deep foliage top-left -> light text
-          if (siteHeader) siteHeader.setAttribute('data-nav-tone', 'light');
-          if (navGroupLeft) navGroupLeft.setAttribute('data-tone', 'light');
-          if (navGroupRight) navGroupRight.setAttribute('data-tone', 'light');
-        }
-
-        if (!activeImg) return;
-
-        if (!activeImg.complete || activeImg.naturalWidth === 0) {
-          activeImg.addEventListener('load', updateNavbarContrast, { once: true });
-          return;
-        }
-
-        const cacheKey = activeImg.currentSrc || activeImg.src;
-        let lumData = luminanceCache.get(cacheKey);
-
-        if (!lumData) {
-          try {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-            if (ctx) {
-              const sampleW = 60;
-              const sampleH = 16;
-              canvas.width = sampleW;
-              canvas.height = sampleH;
-
-              // Sample the top 15% strip of the image (where the fixed navbar sits)
-              ctx.drawImage(
-                activeImg,
-                0, 0, activeImg.naturalWidth, Math.max(1, Math.floor(activeImg.naturalHeight * 0.15)),
-                0, 0, sampleW, sampleH
-              );
-
-              const imgData = ctx.getImageData(0, 0, sampleW, sampleH).data;
-              let leftLumSum = 0;
-              let leftCount = 0;
-              let rightLumSum = 0;
-              let rightCount = 0;
-              let totalLumSum = 0;
-              let totalCount = 0;
-
-              for (let y = 0; y < sampleH; y++) {
-                for (let x = 0; x < sampleW; x++) {
-                  const idx = (y * sampleW + x) * 4;
-                  const r = imgData[idx];
-                  const g = imgData[idx + 1];
-                  const b = imgData[idx + 2];
-                  // ITU-R BT.709 relative perceptual luminance
-                  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-
-                  totalLumSum += lum;
-                  totalCount++;
-
-                  // Left group covers ~first 35% of navbar width
-                  if (x < sampleW * 0.35) {
-                    leftLumSum += lum;
-                    leftCount++;
-                  }
-                  // Right group covers ~last 45% of navbar width (Portfolio, About, Contact)
-                  else if (x > sampleW * 0.55) {
-                    rightLumSum += lum;
-                    rightCount++;
-                  }
-                }
-              }
-
-              const avgLum = totalLumSum / (totalCount || 1);
-              const leftAvg = leftCount > 0 ? leftLumSum / leftCount : avgLum;
-              const rightAvg = rightCount > 0 ? rightLumSum / rightCount : avgLum;
-
-              lumData = {
-                overall: avgLum < 140 ? 'light' : 'dark',
-                left: leftAvg < 140 ? 'light' : 'dark',
-                right: rightAvg < 140 ? 'light' : 'dark',
-              };
-
-              luminanceCache.set(cacheKey, lumData);
-            }
-          } catch (e) {
-            // Fallback gracefully to default
-          }
-        }
-
-        if (lumData) {
-          if (siteHeader) siteHeader.setAttribute('data-nav-tone', lumData.overall);
-          if (navGroupLeft) navGroupLeft.setAttribute('data-tone', lumData.left);
-          if (navGroupRight) navGroupRight.setAttribute('data-tone', lumData.right);
-        }
-      }
-
-      function setMode(mode) {
-        if (body.getAttribute('data-mode') === mode) return;
-
-        body.setAttribute('data-mode', mode);
-
-        toggleButtons.forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.target === mode);
-        });
-
-        updateNavbarContrast();
-        // Scroll scenes show mode-dependent photos (and their loading
-        // skeletons), so redraw them for the new mode.
-        onScroll();
-      }
-
-      toggleButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          setMode(btn.dataset.target);
-        });
-      });
-
-      // 3. SMOOTH NAVIGATION (Portfolio scrolls to top when already on home page)
-      const navPortfolio = document.getElementById('nav-portfolio');
-      if (navPortfolio) {
-        navPortfolio.addEventListener('click', (e) => {
-          e.preventDefault();
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-      }
-
-      // 4. SCROLL BINDINGS (Frame Zoom, Horizontal Gallery & Darkroom Develop)
-      // All layout measurement lives in measureScrollScenes(), which runs only
-      // on load and resize. The per-frame render is plain arithmetic on those
-      // cached numbers plus style writes, and runs at most once per animation
-      // frame — so scrolling never forces a layout recalculation.
-      const zoomSection = document.querySelector('.frame-zoom-section');
-      const zoomBox = document.querySelector('.zoom-frame-box');
-      const horizontalSection = document.querySelector('.horizontal-scroll-section');
-      const horizontalTrack = document.querySelector('.horizontal-track');
-      const scrollHeader = document.getElementById('site-header');
-      const motionStill = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-      // SKELETON LOADING: every photo sits on a shimmering grey skeleton
-      // (style.css) until it has loaded. Tag each one as it arrives so the CSS
-      // can retire its skeleton, and redraw so the print stack section can
-      // drop its loading state. Photos already in the cache are tagged at once.
-      document.querySelectorAll('.hero-photo, .image-box-media img, .stack-print img').forEach(img => {
-        if (img.complete && img.naturalWidth > 0) {
-          img.classList.add('is-loaded');
-        } else {
-          img.addEventListener('load', () => {
-            img.classList.add('is-loaded');
-            onScroll();
-          }, { once: true });
-        }
-      });
-
-      // DARKROOM DEVELOP (the scrolling row): the photo at the centre of the
-      // screen is in focus. Each frame's --develop (0 = blank paper, 1 = full
-      // photograph) follows its distance from the centre, in units of the
-      // frame's own width: full colour within DEVELOP_HOLD of the centre,
-      // fading back to paper over DEVELOP_FADE. style.css turns --develop into
-      // the paper overlay's and the caption's opacity.
-      const galleryFrames = Array.from(document.querySelectorAll('.image-box'));
-      const DEVELOP_HOLD = 0.25;
-      const DEVELOP_FADE = 0.9;
-
-      // 5. PRINT STACK SECTION
-      // The section pins while you scroll through a stack of photo prints. Its
-      // scroll is a timeline: each print holds on top of the pile, then gets
-      // lifted up and away (swinging aside and tilting as it goes) while the
-      // next print straightens and settles up from underneath. The text fades
-      // out with the old print and back in with the new one. The last print
-      // stays. Step lengths are relative shares of the scroll.
-      const stackSection = document.querySelector('.stack-section');
-      const stackCard = document.querySelector('.stack-card');
-      const stackPile = document.querySelector('.stack-prints');
-      const stackPrints = Array.from(document.querySelectorAll('.stack-print'));
-      const stackTexts = Array.from(document.querySelectorAll('.stack-text'));
-      const stackCounter = document.querySelector('.stack-counter-current');
-
-      const STACK_HOLD = 1;
-      const STACK_LIFT = 1;
-
-      // How each print lies in the pile before its turn: a small tilt and
-      // nudge, so the edges of the prints underneath peek out.
-      const PILE_TILT = [-3, 2.5, -1.5, 3, -2, 1.5]; // degrees
-      const PILE_NUDGE = [[-6, 8], [7, 5], [-4, 10], [6, 7], [-7, 6], [4, 9]]; // px [x, y]
-      const PILE_SCALE = 0.96;
-      // How the top print leaves: swings this far aside and tilts this much.
-      const LIFT_SWING = 40; // px
-      const LIFT_TILT = -8; // degrees
-
-      const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
-      const easeInCubic = t => t * t * t;
-      const smoothstep = t => t * t * (3 - 2 * t);
-
-      function buildStackSteps(count) {
-        const steps = [];
-        for (let i = 0; i < count; i++) {
-          steps.push({ print: i, kind: 'hold', share: STACK_HOLD });
-          if (i < count - 1) steps.push({ print: i, kind: 'lift', share: STACK_LIFT });
-        }
-        const total = steps.reduce((sum, step) => sum + step.share, 0);
-        let at = 0;
-        for (const step of steps) {
-          step.start = at / total;
-          at += step.share;
-          step.end = at / total;
-        }
-        return steps;
-      }
-
-      const stackSteps = buildStackSteps(stackPrints.length);
-
-      // The pose (a CSS transform) for print k when print `top` is on top of
-      // the pile and `lift` (0..1) of the way through being lifted off it.
-      // Poses meet exactly at every step boundary, so nothing ever jumps.
-      function printPose(k, top, lift) {
-        if (k < top) {
-          // Already lifted away: parked where the lift left it, off-screen.
-          return `translate3d(${LIFT_SWING}px, ${(-scene.stackExit).toFixed(1)}px, 0) rotate(${LIFT_TILT}deg) scale(1.04)`;
-        }
-        if (k === top) {
-          // Picked up: it swings aside and tilts early, then accelerates away
-          // upward, the way you'd flick a print off the pile.
-          const swing = easeOutCubic(lift);
-          const away = easeInCubic(lift);
-          return `translate3d(${(LIFT_SWING * swing).toFixed(1)}px, ${(-scene.stackExit * away).toFixed(1)}px, 0) rotate(${(LIFT_TILT * swing).toFixed(2)}deg) scale(${(1 + 0.04 * swing).toFixed(3)})`;
-        }
-        // Still in the pile. The print directly underneath straightens and
-        // settles up into the top spot as the one above it is lifted.
-        const settle = k === top + 1 ? easeOutCubic(lift) : 0;
-        const keep = 1 - settle;
-        const tilt = PILE_TILT[k % PILE_TILT.length];
-        const [nx, ny] = PILE_NUDGE[k % PILE_NUDGE.length];
-        return `translate3d(${(nx * keep).toFixed(1)}px, ${(ny * keep).toFixed(1)}px, 0) rotate(${(tilt * keep).toFixed(2)}deg) scale(${(PILE_SCALE + (1 - PILE_SCALE) * settle).toFixed(3)})`;
-      }
-
-      const scene = {
-        zoomTop: 0, zoomRange: 1,
-        galleryTop: 0, galleryRange: 1, galleryTravel: 0, frames: [],
-        stackTop: 0, stackRange: 1, stackExit: 0,
-        stackPoses: [], stackShowing: -1, stackCopy: '',
-        viewportWidth: window.innerWidth
-      };
-
-      const clamp01 = value => (value < 0 ? 0 : value > 1 ? 1 : value);
-
-      function measureScrollScenes() {
-        const scrollY = window.scrollY;
-        const viewportHeight = window.innerHeight;
-        scene.viewportWidth = window.innerWidth;
-
-        if (zoomSection) {
-          scene.zoomTop = zoomSection.getBoundingClientRect().top + scrollY;
-          scene.zoomRange = Math.max(1, zoomSection.offsetHeight - viewportHeight);
-        }
-
-        if (horizontalSection && horizontalTrack) {
-          scene.galleryTop = horizontalSection.getBoundingClientRect().top + scrollY;
-          scene.galleryRange = Math.max(1, horizontalSection.offsetHeight - viewportHeight);
-          // The track starts with its first photo centred and ends running out
-          // to the right edge (its padding, in style.css), so travelling
-          // scrollWidth - viewport covers exactly that.
-          scene.galleryTravel = Math.max(0, horizontalTrack.scrollWidth - scene.viewportWidth);
-        }
-
-        // offsetLeft ignores transforms, so these are each frame's resting
-        // positions no matter where the track currently sits.
-        scene.frames = galleryFrames.map(box => ({
-          box, center: box.offsetLeft + box.offsetWidth / 2, width: box.offsetWidth, develop: ''
-        }));
-
-        if (stackSection && stackPile) {
-          scene.stackTop = stackSection.getBoundingClientRect().top + scrollY;
-          scene.stackRange = Math.max(1, stackSection.offsetHeight - viewportHeight);
-          // A lifted print travels a full screen plus half its own height (and
-          // a margin for its tilted corners), which clears the top of the
-          // screen wherever the pile sits.
-          scene.stackExit = viewportHeight + stackPile.offsetHeight / 2 + 40;
-          scene.stackPoses = []; // re-pose every print at the new size
-        }
-      }
-
-      function renderScrollScenes() {
-        scrollFrame = 0;
-        const scrollY = window.scrollY;
-
-        // Frame Zoom (scales from 0.45 up to 1.0)
-        if (zoomBox) {
-          const progress = clamp01((scrollY - scene.zoomTop) / scene.zoomRange);
-          zoomBox.style.transform = `scale(${0.45 + progress * 0.55})`;
-        }
-
-        // Horizontal gallery: a sideways slide, with the centre photo in focus
-        if (horizontalTrack) {
-          const progress = clamp01((scrollY - scene.galleryTop) / scene.galleryRange);
-          const shift = progress * scene.galleryTravel;
-          horizontalTrack.style.transform = `translate3d(${(-shift).toFixed(2)}px, 0, 0)`;
-
-          const half = scene.viewportWidth / 2;
-          const still = motionStill.matches;
-          for (const frame of scene.frames) {
-            const fromCentre = Math.abs(frame.center - shift - half);
-            const t = 1 - clamp01((fromCentre - frame.width * DEVELOP_HOLD) / (frame.width * DEVELOP_FADE));
-            const develop = (still ? 1 : smoothstep(t)).toFixed(3);
-            if (develop !== frame.develop) {
-              frame.develop = develop;
-              frame.box.style.setProperty('--develop', develop);
-            }
-          }
-        }
-
-        // Print stack section
-        if (stackCard && stackSteps.length) {
-          const progress = clamp01((scrollY - scene.stackTop) / scene.stackRange);
-          const step = stackSteps.find(s => progress <= s.end) || stackSteps[stackSteps.length - 1];
-          const still = motionStill.matches;
-          let lift = step.kind === 'lift' ? clamp01((progress - step.start) / (step.end - step.start)) : 0;
-          if (still) lift = lift < 0.5 ? 0 : 1; // reduced motion: swap, don't fly
-
-          stackPrints.forEach((print, k) => {
-            const pose = printPose(k, step.print, lift);
-            if (pose !== scene.stackPoses[k]) {
-              scene.stackPoses[k] = pose;
-              print.style.transform = pose;
-              print.style.visibility = k < step.print ? 'hidden' : '';
-            }
-          });
-
-          // The text and counter switch halfway through a lift, while the text
-          // is fully faded: out over the first 45%, back in over the last 45%.
-          const showing = step.kind === 'lift' && lift >= 0.5 ? step.print + 1 : step.print;
-          let copy = 1;
-          if (step.kind === 'lift' && !still) {
-            copy = lift < 0.5 ? 1 - smoothstep(clamp01(lift / 0.45)) : smoothstep(clamp01((lift - 0.55) / 0.45));
-          }
-
-          if (showing !== scene.stackShowing) {
-            scene.stackShowing = showing;
-            stackTexts.forEach((el, i) => el.classList.toggle('is-current', i === showing));
-            stackPrints.forEach((el, i) => el.classList.toggle('is-top', i === showing));
-            if (stackCounter) stackCounter.textContent = String(showing + 1).padStart(2, '0');
-          }
-
-          const copyKey = copy.toFixed(3);
-          if (copyKey !== scene.stackCopy) {
-            scene.stackCopy = copyKey;
-            stackCard.style.setProperty('--copy', copyKey);
-          }
-
-          // Skeleton until the photo on show (this print, this mode) has loaded.
-          const mode = body.getAttribute('data-mode') === 'weddings' ? 'weddings' : 'commercial';
-          const photo = stackPrints[showing].querySelector(`.mode-photo-${mode}`);
-          stackCard.classList.toggle('is-loading', !!photo && !photo.classList.contains('is-loaded'));
-        }
-
-        // Navbar scroll enhancement (elevation shadow)
-        if (scrollHeader) {
-          scrollHeader.classList.toggle('scrolled', scrollY > 20);
-        }
-      }
-
-      let scrollFrame = 0;
-      function onScroll() {
-        if (!scrollFrame) scrollFrame = requestAnimationFrame(renderScrollScenes);
-      }
-
-      window.addEventListener('scroll', onScroll, { passive: true });
-      window.addEventListener('resize', () => {
-        measureScrollScenes();
-        renderScrollScenes();
-        updateNavbarContrast();
-      });
-      window.addEventListener('load', () => {
-        window.scrollTo(0, 0);
-        measureScrollScenes();
-        renderScrollScenes();
-        updateNavbarContrast();
-      });
-
-      // PHOTO LOADING: photos load lazily, as they come near the screen, and
-      // show a skeleton until they arrive. Each frame's photo for the other
-      // mode is kept out of view until a mode switch brings it in, so on its
-      // own it would only start loading at the click. Instead, start those
-      // downloads the moment a visitor shows intent to switch (pointing at,
-      // focusing or touching the other tab), just before the click lands.
-      // Visitors who never switch never download the other mode's photos.
-      const prefetchedModes = new Set();
-
-      function prefetchMode(mode) {
-        if (prefetchedModes.has(mode)) return;
-        prefetchedModes.add(mode);
-        document.querySelectorAll(`.image-box-media .mode-photo-${mode}, .stack-print .mode-photo-${mode}`)
-          .forEach(img => { img.loading = 'eager'; });
-      }
-
-      toggleButtons.forEach(btn => {
-        const intent = () => {
-          if (btn.dataset.target !== body.getAttribute('data-mode')) prefetchMode(btn.dataset.target);
-        };
-        btn.addEventListener('pointerenter', intent);
-        btn.addEventListener('focus', intent);
-        btn.addEventListener('touchstart', intent, { passive: true });
-      });
-      measureScrollScenes();
-      renderScrollScenes();
-      updateNavbarContrast();
-    </script>
+    <!-- Rotational Wheel Page Transitions Router & Portfolio Controller -->
+    <script type="module" src="transitions.js"></script>
   </body>
 </html>
