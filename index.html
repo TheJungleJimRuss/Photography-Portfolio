@@ -101,6 +101,11 @@
          =================================================================== -->
     <section class="frame-zoom-section" id="zoom-reel">
       <div class="sticky-viewport">
+        <!-- Matiaz's cat video plays behind the whole section, around the
+             frame. Like the puppy below, the script gives it its src once the
+             visitor starts scrolling. -->
+        <video class="zoom-backdrop-video" data-src="CATCAT.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+
         <div class="section-indicator">
           <div class="mode-crossfade-stack">
             <span class="mode-text-commercial">Scroll Effect: Frame Zoom (Brand Campaign Showcase)</span>
@@ -108,11 +113,26 @@
           </div>
         </div>
         
-        <!-- The empty frame box that zooms as you scroll -->
+        <!-- The frame that zooms as you scroll, with Matiaz's puppy video
+             inside it. The video fills the frame exactly and drifts a little
+             inside it (parallax). It holds on a still frame under the title
+             while the frame zooms, and starts playing once it is fully zoomed
+             in, as the title eases out. It has no src here on purpose: the
+             script loads it once the visitor starts scrolling, so the 14.7 MB
+             file never slows the first page load. The frame shows a loading
+             skeleton until the video is ready.
+             PLACEHOLDER TITLE: swap in the real reel's name. -->
         <div class="zoom-frame-box">
-          <div class="mode-crossfade-stack">
-            <span class="mode-text-commercial">COMMERCIAL CAMPAIGN REEL</span>
-            <span class="mode-text-weddings">ESTATE CEREMONY MONOGRAPH</span>
+          <video class="zoom-video" data-src="Puppy.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+          <div class="zoom-reel-title">
+            <div class="zoom-reel-mode for-commercial">
+              <p class="zoom-reel-kicker">Commercial Stills &amp; Film</p>
+              <h2 class="zoom-reel-heading">Campaign Reel</h2>
+            </div>
+            <div class="zoom-reel-mode for-weddings">
+              <p class="zoom-reel-kicker">Private Estates &amp; Ceremonies</p>
+              <h2 class="zoom-reel-heading">Estate Ceremony</h2>
+            </div>
           </div>
         </div>
       </div>
@@ -670,15 +690,94 @@
         }
       }
 
+      // ZOOM SECTION VIDEOS (Matiaz's parallax): the cat plays behind the
+      // whole section, drifting slowly around the frame. The puppy fills the
+      // frame itself (cropped, never stretched) but holds on a still frame
+      // under a title while the frame zooms; over the last stretch of the zoom
+      // the title eases out, and once the frame is fully zoomed in the puppy
+      // starts playing. Scrolling back pauses it and brings the title back.
+      // The frame zooms over the first ZOOM_PORTION of the section's scroll
+      // and holds at full size for the rest, so the playing video stays on
+      // screen for a while. Both videos (8 MB and 14.7 MB) only start
+      // downloading once the visitor has started scrolling, never at page
+      // load, and only play while the section is on screen. Until each one
+      // is ready, a loading skeleton shows instead. Reduced-motion visitors
+      // see both as still frames, without drift.
+      const ZOOM_PORTION = 0.7;
+      const zoomBackdrop = zoomSection ? zoomSection.querySelector('.zoom-backdrop-video') : null;
+      const zoomVideo = zoomBox ? zoomBox.querySelector('.zoom-video') : null;
+      const zoomVideos = [zoomBackdrop, zoomVideo].filter(Boolean);
+      const zoomVideoPlaying = new Map();
+
+      zoomVideos.forEach(video => {
+        // The puppy's readiness goes on the frame (it drives the frame's
+        // skeleton and title); the cat's goes on the video itself.
+        const target = video === zoomVideo ? zoomBox : video;
+        const markReady = () => target.classList.add('is-video-ready');
+        video.addEventListener('loadeddata', markReady);
+        if (video.readyState >= 2) markReady();
+      });
+
+      function setZoomVideoPlaying(video, play) {
+        if (zoomVideoPlaying.get(video) === play) return;
+        zoomVideoPlaying.set(video, play);
+        if (play) video.play().catch(() => {});
+        else video.pause();
+      }
+
+      function updateZoomScene(scrollY, zoomProgress, frameProgress) {
+        const viewportHeight = window.innerHeight;
+        const onScreen = scrollY + viewportHeight > scene.zoomTop
+          && scrollY < scene.zoomTop + scene.zoomRange + viewportHeight;
+
+        // Start downloading once the visitor has started scrolling and the
+        // section is within about a screen (so never at page load).
+        if (scrollY > 0 && scrollY + viewportHeight * 2 > scene.zoomTop) {
+          zoomVideos.forEach(video => {
+            if (!video.getAttribute('src')) {
+              video.preload = 'auto';
+              video.src = video.dataset.src;
+            }
+          });
+        }
+
+        const still = motionStill.matches;
+        if (zoomBackdrop) setZoomVideoPlaying(zoomBackdrop, onScreen && !still);
+        if (zoomVideo) setZoomVideoPlaying(zoomVideo, onScreen && frameProgress >= 0.999 && !still);
+        if (!onScreen) return;
+
+        // Parallax: both videos drift up as you scroll. Each is scaled 1.12
+        // (6% spare on each side) and drifts at most 5%, so no edges show.
+        const drift = still ? 0 : 0.5 - zoomProgress;
+        if (zoomBackdrop) zoomBackdrop.style.transform = `translate3d(0, ${(drift * 8).toFixed(2)}%, 0) scale(1.12)`;
+        if (zoomVideo) zoomVideo.style.transform = `translate3d(0, ${(drift * 10).toFixed(2)}%, 0) scale(1.12)`;
+
+        // The title holds while the frame zooms, then eases out over the last
+        // 45% of the zoom, finishing just as the puppy starts to play.
+        // style.css turns --reveal into the title's and the tint's fade.
+        if (zoomBox) {
+          const reveal = smoothstep(clamp01((frameProgress - 0.55) / 0.45)).toFixed(3);
+          if (reveal !== scene.zoomReveal) {
+            scene.zoomReveal = reveal;
+            zoomBox.style.setProperty('--reveal', reveal);
+          }
+        }
+      }
+
       function renderScrollScenes() {
         scrollFrame = 0;
         const scrollY = window.scrollY;
 
-        // Frame Zoom (scales from 0.45 up to 1.0)
+        // Frame Zoom: scales from 0.45 up to 1.0 over the first ZOOM_PORTION of
+        // the section, then holds at full size while the puppy plays.
+        const zoomProgress = clamp01((scrollY - scene.zoomTop) / scene.zoomRange);
+        const frameProgress = clamp01(zoomProgress / ZOOM_PORTION);
         if (zoomBox) {
-          const progress = clamp01((scrollY - scene.zoomTop) / scene.zoomRange);
-          zoomBox.style.transform = `scale(${0.45 + progress * 0.55})`;
+          zoomBox.style.transform = `scale(${0.45 + frameProgress * 0.55})`;
         }
+
+        // The two videos and the title in the zoom section
+        updateZoomScene(scrollY, zoomProgress, frameProgress);
 
         // Horizontal gallery: a sideways slide, with the centre photo in focus
         if (horizontalTrack) {
@@ -791,6 +890,141 @@
         btn.addEventListener('focus', intent);
         btn.addEventListener('touchstart', intent, { passive: true });
       });
+
+      // 6. LIGHTBOX: click (or press Enter on) a photo in the scrolling row or
+      // the print stack to see it large. The arrow keys, the side buttons or a
+      // swipe flip through that section's photos; Esc, the close button or a
+      // click on the dark background closes it. Built here rather than in the
+      // markup because it only works with the script anyway.
+      const lightbox = document.createElement('dialog');
+      lightbox.className = 'lightbox';
+      lightbox.setAttribute('aria-label', 'Photo viewer');
+      lightbox.innerHTML = `
+        <button class="lightbox-button lightbox-close" type="button" aria-label="Close">&times;</button>
+        <button class="lightbox-button lightbox-prev" type="button" aria-label="Previous photo">&lsaquo;</button>
+        <figure class="lightbox-figure">
+          <div class="lightbox-frame"><img class="lightbox-photo" alt="" /></div>
+          <figcaption class="lightbox-caption">
+            <span class="lightbox-count"></span>
+            <span class="lightbox-title"></span>
+            <span class="lightbox-blurb"></span>
+          </figcaption>
+        </figure>
+        <button class="lightbox-button lightbox-next" type="button" aria-label="Next photo">&rsaquo;</button>`;
+      document.body.appendChild(lightbox);
+
+      const lbFigure = lightbox.querySelector('.lightbox-figure');
+      const lbFrame = lightbox.querySelector('.lightbox-frame');
+      const lbPhoto = lightbox.querySelector('.lightbox-photo');
+      const lbCount = lightbox.querySelector('.lightbox-count');
+      const lbTitle = lightbox.querySelector('.lightbox-title');
+      const lbBlurb = lightbox.querySelector('.lightbox-blurb');
+      let lightboxSet = [];
+      let lightboxIndex = 0;
+      let lightboxReturn = null;
+
+      const currentMode = () => (body.getAttribute('data-mode') === 'weddings' ? 'weddings' : 'commercial');
+      const pad2 = n => String(n).padStart(2, '0');
+
+      // Each section flips through its own photos, in the mode on screen.
+      function rowPhotos(mode) {
+        return galleryFrames.map(box => ({
+          src: box.querySelector(`.mode-photo-${mode}`).src,
+          title: box.querySelector(`.mode-text-${mode}`).textContent.trim(),
+          blurb: ''
+        }));
+      }
+
+      function stackPhotos(mode) {
+        return stackPrints.map((print, i) => {
+          const copy = stackTexts[i].querySelector(`.for-${mode}`);
+          return {
+            src: print.querySelector(`.mode-photo-${mode}`).src,
+            title: copy.querySelector('.stack-title').textContent.trim(),
+            blurb: copy.querySelector('.stack-blurb').textContent.trim()
+          };
+        });
+      }
+
+      function showLightboxPhoto(index, direction) {
+        lightboxIndex = (index + lightboxSet.length) % lightboxSet.length;
+        const item = lightboxSet[lightboxIndex];
+        // Skeleton until the photo is ready (usually it already is).
+        lbFrame.classList.add('is-loading');
+        lbPhoto.onload = () => lbFrame.classList.remove('is-loading');
+        lbPhoto.src = item.src;
+        lbPhoto.alt = item.title;
+        if (lbPhoto.complete && lbPhoto.naturalWidth > 0) lbFrame.classList.remove('is-loading');
+        lbCount.textContent = `${pad2(lightboxIndex + 1)} / ${pad2(lightboxSet.length)}`;
+        lbTitle.textContent = item.title;
+        lbBlurb.textContent = item.blurb;
+        lbBlurb.hidden = !item.blurb;
+        // The new photo slides in from the side you're flipping towards.
+        if (direction && !motionStill.matches) {
+          lbFigure.animate([
+            { transform: `translateX(${direction * 32}px)`, opacity: 0.35 },
+            { transform: 'none', opacity: 1 }
+          ], { duration: 360, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+        }
+      }
+
+      function openLightbox(set, index, returnTo) {
+        lightboxSet = set;
+        lightboxReturn = returnTo;
+        document.documentElement.classList.add('lightbox-open');
+        lightbox.showModal();
+        showLightboxPhoto(index, 0);
+      }
+
+      lightbox.addEventListener('close', () => {
+        document.documentElement.classList.remove('lightbox-open');
+        if (lightboxReturn) lightboxReturn.focus({ preventScroll: true });
+      });
+      lightbox.querySelector('.lightbox-close').addEventListener('click', () => lightbox.close());
+      lightbox.querySelector('.lightbox-prev').addEventListener('click', () => showLightboxPhoto(lightboxIndex - 1, -1));
+      lightbox.querySelector('.lightbox-next').addEventListener('click', () => showLightboxPhoto(lightboxIndex + 1, 1));
+      lightbox.addEventListener('click', e => {
+        if (e.target === lightbox) lightbox.close();
+      });
+      lightbox.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); showLightboxPhoto(lightboxIndex + 1, 1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); showLightboxPhoto(lightboxIndex - 1, -1); }
+      });
+
+      // Swipe on touch screens (or drag with a mouse) to flip.
+      let swipeStartX = null;
+      lbFrame.addEventListener('pointerdown', e => { swipeStartX = e.clientX; });
+      lbFrame.addEventListener('pointerup', e => {
+        if (swipeStartX === null) return;
+        const dx = e.clientX - swipeStartX;
+        swipeStartX = null;
+        if (Math.abs(dx) > 50) showLightboxPhoto(lightboxIndex + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
+      });
+
+      // Make the photos openable, by mouse and by keyboard.
+      function makeEnlargeable(el, label, open) {
+        el.classList.add('can-enlarge');
+        el.tabIndex = 0;
+        el.setAttribute('role', 'button');
+        el.setAttribute('aria-label', label);
+        el.addEventListener('click', open);
+        el.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+        });
+      }
+
+      galleryFrames.forEach((box, i) => {
+        makeEnlargeable(box, `Enlarge photo ${i + 1} of ${galleryFrames.length}`,
+          () => openLightbox(rowPhotos(currentMode()), i, box));
+      });
+
+      if (stackPile) {
+        // The pile was hidden from screen readers as pure decoration; it's a
+        // control now, so expose it.
+        stackPile.removeAttribute('aria-hidden');
+        makeEnlargeable(stackPile, 'Enlarge the photo on top of the stack',
+          () => openLightbox(stackPhotos(currentMode()), Math.max(0, scene.stackShowing), stackPile));
+      }
       measureScrollScenes();
       renderScrollScenes();
       updateNavbarContrast();

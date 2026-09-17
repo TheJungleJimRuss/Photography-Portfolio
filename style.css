@@ -606,31 +606,191 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
    ========================================================================== */
 .frame-zoom-section {
   position: relative;
-  height: 250vh;
+  /* The frame zooms over the first 70% of the scroll (ZOOM_PORTION in
+     index.html), then holds at full size while the puppy video plays. */
+  height: 300vh;
   border-bottom: 2px solid var(--border-subtle);
   transition: border-color 0.6s ease;
 }
 
 /* The empty box that scales up as you scroll */
-.zoom-frame-box {
-  width: 100vw;
-  height: 100vh;
-  background-color: var(--bg-box);
-  border: 2px dashed var(--border-dashed);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform-origin: center center;
+/* Matiaz's cat video, behind the whole section and around the frame. The
+   section's page colour shows until it's ready, then it fades in. */
+.zoom-backdrop-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(1.12);
+  pointer-events: none;
   will-change: transform;
-  transition: background-color 0.6s ease, border-color 0.6s ease;
+  transition: opacity 0.6s ease;
 }
 
-.zoom-frame-box span {
-  font-size: 1.25rem;
-  letter-spacing: 0.1em;
-  color: var(--text-muted);
+.zoom-backdrop-video.is-video-ready {
+  opacity: 1;
+}
+
+/* Once the cat is showing, the section label turns white over a soft dark
+   band so it stays readable on the video. */
+.frame-zoom-section .sticky-viewport::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 10rem;
+  z-index: 1;
+  background: linear-gradient(rgba(0, 0, 0, 0.42), transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.frame-zoom-section .sticky-viewport:has(.zoom-backdrop-video.is-video-ready)::before {
+  opacity: 1;
+}
+
+.frame-zoom-section .sticky-viewport:has(.zoom-backdrop-video.is-video-ready) .section-indicator {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.zoom-frame-box {
+  --reveal: 0; /* 0 = title showing over a still frame, 1 = title gone, video playing */
+  z-index: 2; /* above the cat */
+  position: relative;
+  overflow: hidden; /* the video drifts inside the frame, clipped to it */
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-box); /* loading skeleton grey */
+  transform-origin: center center;
+  will-change: transform;
+  transition: background-color 0.6s ease;
+}
+
+/* Matiaz's video fills the frame exactly: cropped to fit, never stretched.
+   Hidden until it has a frame to show, then it fades in over the skeleton.
+   The script drifts it inside the frame (parallax). */
+.zoom-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(1.12);
+  pointer-events: none;
+  will-change: transform;
+  transition: opacity 0.6s ease;
+}
+
+.zoom-frame-box.is-video-ready .zoom-video {
+  opacity: 1;
+}
+
+/* Skeleton sweep across the frame until the video is ready. */
+.zoom-frame-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.5) 50%, transparent 80%);
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.zoom-frame-box.is-video-ready::before {
+  opacity: 0;
+  animation: none;
+}
+
+/* Tint over the still frame so the title reads; it clears as the title
+   leaves and the puppy starts playing. */
+.zoom-frame-box::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.28) 75%);
+  opacity: calc(1 - var(--reveal));
+  pointer-events: none;
+}
+
+/* PLACEHOLDER TITLE over the still frame. As the frame finishes zooming it
+   eases out (fades, drifts up and opens up slightly), driven by --reveal
+   from the script. Everything scales with the frame, so it grows with it. */
+.zoom-reel-title {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-areas: "title";
+  place-items: center;
+  color: #ffffff;
+  text-align: center;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  opacity: calc(1 - var(--reveal));
+  transform: translateY(calc(var(--reveal) * -6vh)) scale(calc(1 + var(--reveal) * 0.08));
+  will-change: opacity, transform;
+}
+
+/* No title or tint over the loading skeleton; they arrive with the video. */
+.zoom-frame-box:not(.is-video-ready)::after,
+.zoom-frame-box:not(.is-video-ready) .zoom-reel-title {
+  visibility: hidden;
+}
+
+/* Commercial and Weddings versions share the spot and crossfade on a mode
+   switch. */
+.zoom-reel-mode {
+  grid-area: title;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.4vw;
+  transition: opacity 0.6s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body[data-mode="commercial"] .zoom-reel-mode.for-weddings,
+body[data-mode="weddings"] .zoom-reel-mode.for-commercial {
+  opacity: 0;
+  transform: translateY(2vh);
+}
+
+.zoom-reel-kicker {
+  font-family: var(--font-commercial);
+  font-size: clamp(0.9rem, 1.6vw, 1.6rem);
+  font-weight: 500;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  transition: color 0.6s ease;
+  opacity: 0.85;
+}
+
+.zoom-reel-heading {
+  font-family: var(--font-commercial);
+  font-size: clamp(3rem, 9vw, 9.5rem);
+  font-weight: 300;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.for-weddings .zoom-reel-heading {
+  font-family: var(--font-weddings);
+  font-size: clamp(3.5rem, 10.5vw, 11rem);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zoom-frame-box::before {
+    animation: none;
+    background: none;
+  }
 }
 
 /* ==========================================================================
@@ -1092,6 +1252,213 @@ body[data-mode="weddings"] .hero-image-space:has(.photo-weddings.is-loaded)::bef
   .stack-skeleton span::after {
     animation: none;
     background: none;
+  }
+}
+
+/* ==========================================================================
+   LIGHTBOX
+   Click (or press Enter on) a photo in the scrolling row or the print stack
+   to see it large. Built and driven by the script in index.html, which also
+   marks the photos it made clickable with .can-enlarge.
+   ========================================================================== */
+.can-enlarge {
+  cursor: zoom-in;
+}
+
+.can-enlarge:focus-visible {
+  outline: 2px solid var(--text-main);
+  outline-offset: 6px;
+}
+
+html.lightbox-open {
+  overflow: hidden; /* the page stays put behind the viewer */
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  border: 0;
+  background-color: rgba(12, 12, 12, 0.95);
+  color: #ffffff;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 1.5rem);
+}
+
+.lightbox[open] {
+  display: grid;
+  animation: lightbox-in 0.22s ease-out;
+}
+
+body[data-mode="weddings"] .lightbox {
+  background-color: rgba(30, 24, 20, 0.96); /* warm espresso in Weddings mode */
+}
+
+.lightbox::backdrop {
+  background: transparent; /* the dialog itself is the dark backdrop */
+}
+
+.lightbox-figure {
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.lightbox[open] .lightbox-figure {
+  animation: lightbox-grow 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lightbox-frame {
+  position: relative;
+  width: 100%;
+  height: min(78vh, 1000px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: pan-y; /* sideways swipes flip photos */
+}
+
+.lightbox-photo {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  transition: opacity 0.25s ease;
+}
+
+/* Skeleton while a photo is still loading. */
+.lightbox-frame.is-loading .lightbox-photo {
+  opacity: 0;
+}
+
+.lightbox-frame.is-loading::before {
+  content: '';
+  position: absolute;
+  inset: 12% 22%;
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.08);
+  background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.12) 50%, transparent 80%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: lightbox-sweep 1.4s ease-in-out infinite;
+}
+
+.lightbox-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: min(640px, 90vw);
+  text-align: center;
+}
+
+.lightbox-count {
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+
+.lightbox-title {
+  font-size: 1.05rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+body[data-mode="weddings"] .lightbox-title {
+  font-family: var(--font-weddings);
+  font-size: 1.5rem;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.lightbox-blurb {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  opacity: 0.72;
+}
+
+.lightbox-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.lightbox-button:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.lightbox-button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: clamp(0.75rem, 2vw, 1.5rem);
+  right: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+@keyframes lightbox-in {
+  from { opacity: 0; }
+}
+
+@keyframes lightbox-grow {
+  from { opacity: 0; transform: scale(0.94); }
+}
+
+@keyframes lightbox-sweep {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+
+@media (max-width: 600px) {
+  .lightbox {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lightbox-frame {
+    height: 70vh;
+  }
+
+  /* Side buttons move to the bottom corners; swiping works too. */
+  .lightbox-prev,
+  .lightbox-next {
+    position: absolute;
+    bottom: 1rem;
+  }
+
+  .lightbox-prev { left: 1rem; }
+  .lightbox-next { right: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox[open],
+  .lightbox[open] .lightbox-figure,
+  .lightbox-frame.is-loading::before {
+    animation: none;
   }
 }
 
