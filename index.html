@@ -101,6 +101,11 @@
          =================================================================== -->
     <section class="frame-zoom-section" id="zoom-reel">
       <div class="sticky-viewport">
+        <!-- Matiaz's cat video plays behind the whole section, around the
+             frame. Like the puppy below, the script gives it its src once the
+             visitor starts scrolling. -->
+        <video class="zoom-backdrop-video" data-src="CATCAT.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+
         <div class="section-indicator">
           <div class="mode-crossfade-stack">
             <span class="mode-text-commercial">Scroll Effect: Frame Zoom (Brand Campaign Showcase)</span>
@@ -108,14 +113,27 @@
           </div>
         </div>
         
-        <!-- The frame that zooms as you scroll, with Matiaz's video inside it.
-             The video fills the frame exactly and drifts a little inside it
-             (parallax). It has no src here on purpose: the script loads it
-             once the visitor starts scrolling, so the 14.7 MB file never
-             slows the first page load. The frame shows a loading skeleton
-             until the video is ready. -->
+        <!-- The frame that zooms as you scroll, with Matiaz's puppy video
+             inside it. The video fills the frame exactly and drifts a little
+             inside it (parallax). It holds on a still frame under the title
+             while the frame zooms, and starts playing once it is fully zoomed
+             in, as the title eases out. It has no src here on purpose: the
+             script loads it once the visitor starts scrolling, so the 14.7 MB
+             file never slows the first page load. The frame shows a loading
+             skeleton until the video is ready.
+             PLACEHOLDER TITLE: swap in the real reel's name. -->
         <div class="zoom-frame-box">
           <video class="zoom-video" data-src="Puppy.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+          <div class="zoom-reel-title">
+            <div class="zoom-reel-mode for-commercial">
+              <p class="zoom-reel-kicker">Commercial Stills &amp; Film</p>
+              <h2 class="zoom-reel-heading">Campaign Reel</h2>
+            </div>
+            <div class="zoom-reel-mode for-weddings">
+              <p class="zoom-reel-kicker">Private Estates &amp; Ceremonies</p>
+              <h2 class="zoom-reel-heading">Estate Ceremony</h2>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -672,48 +690,77 @@
         }
       }
 
-      // ZOOM VIDEO (Matiaz's parallax): one video inside the zooming frame,
-      // filling it exactly (cropped, never stretched) and drifting a little
-      // inside it as you scroll. It is 14.7 MB, so it only starts downloading
-      // once the visitor has started scrolling (never at page load, where it
-      // would compete with the hero photo), and only plays while its section
-      // is on screen. Until it can play, the frame shows a loading skeleton.
-      // Reduced-motion visitors still see it, but paused and without drift.
+      // ZOOM SECTION VIDEOS (Matiaz's parallax): the cat plays behind the
+      // whole section, drifting slowly around the frame. The puppy fills the
+      // frame itself (cropped, never stretched) but holds on a still frame
+      // under a title while the frame zooms; over the last stretch of the zoom
+      // the title eases out, and once the frame is fully zoomed in the puppy
+      // starts playing. Scrolling back pauses it and brings the title back.
+      // The frame zooms over the first ZOOM_PORTION of the section's scroll
+      // and holds at full size for the rest, so the playing video stays on
+      // screen for a while. Both videos (8 MB and 14.7 MB) only start
+      // downloading once the visitor has started scrolling, never at page
+      // load, and only play while the section is on screen. Until each one
+      // is ready, a loading skeleton shows instead. Reduced-motion visitors
+      // see both as still frames, without drift.
+      const ZOOM_PORTION = 0.7;
+      const zoomBackdrop = zoomSection ? zoomSection.querySelector('.zoom-backdrop-video') : null;
       const zoomVideo = zoomBox ? zoomBox.querySelector('.zoom-video') : null;
-      let zoomVideoPlaying = null;
+      const zoomVideos = [zoomBackdrop, zoomVideo].filter(Boolean);
+      const zoomVideoPlaying = new Map();
 
-      if (zoomVideo) {
-        const markReady = () => zoomBox.classList.add('is-video-ready');
-        zoomVideo.addEventListener('loadeddata', markReady);
-        if (zoomVideo.readyState >= 2) markReady();
+      zoomVideos.forEach(video => {
+        // The puppy's readiness goes on the frame (it drives the frame's
+        // skeleton and title); the cat's goes on the video itself.
+        const target = video === zoomVideo ? zoomBox : video;
+        const markReady = () => target.classList.add('is-video-ready');
+        video.addEventListener('loadeddata', markReady);
+        if (video.readyState >= 2) markReady();
+      });
+
+      function setZoomVideoPlaying(video, play) {
+        if (zoomVideoPlaying.get(video) === play) return;
+        zoomVideoPlaying.set(video, play);
+        if (play) video.play().catch(() => {});
+        else video.pause();
       }
 
-      function updateZoomVideo(scrollY, zoomProgress) {
-        if (!zoomVideo) return;
+      function updateZoomScene(scrollY, zoomProgress, frameProgress) {
         const viewportHeight = window.innerHeight;
         const onScreen = scrollY + viewportHeight > scene.zoomTop
           && scrollY < scene.zoomTop + scene.zoomRange + viewportHeight;
 
         // Start downloading once the visitor has started scrolling and the
         // section is within about a screen (so never at page load).
-        if (!zoomVideo.getAttribute('src') && scrollY > 0 && scrollY + viewportHeight * 2 > scene.zoomTop) {
-          zoomVideo.preload = 'auto';
-          zoomVideo.src = zoomVideo.dataset.src;
+        if (scrollY > 0 && scrollY + viewportHeight * 2 > scene.zoomTop) {
+          zoomVideos.forEach(video => {
+            if (!video.getAttribute('src')) {
+              video.preload = 'auto';
+              video.src = video.dataset.src;
+            }
+          });
         }
 
-        const play = onScreen && !motionStill.matches;
-        if (play !== zoomVideoPlaying) {
-          zoomVideoPlaying = play;
-          if (play) zoomVideo.play().catch(() => {});
-          else zoomVideo.pause();
-        }
+        const still = motionStill.matches;
+        if (zoomBackdrop) setZoomVideoPlaying(zoomBackdrop, onScreen && !still);
+        if (zoomVideo) setZoomVideoPlaying(zoomVideo, onScreen && frameProgress >= 0.999 && !still);
+        if (!onScreen) return;
 
-        // Parallax: the video drifts up inside the frame as you scroll. It is
-        // scaled 1.12 (6% spare on each side), and the drift stays within ±5%
-        // of the frame's height, so its edges never show.
-        if (onScreen) {
-          const drift = motionStill.matches ? 0 : (0.5 - zoomProgress) * 10;
-          zoomVideo.style.transform = `translate3d(0, ${drift.toFixed(2)}%, 0) scale(1.12)`;
+        // Parallax: both videos drift up as you scroll. Each is scaled 1.12
+        // (6% spare on each side) and drifts at most 5%, so no edges show.
+        const drift = still ? 0 : 0.5 - zoomProgress;
+        if (zoomBackdrop) zoomBackdrop.style.transform = `translate3d(0, ${(drift * 8).toFixed(2)}%, 0) scale(1.12)`;
+        if (zoomVideo) zoomVideo.style.transform = `translate3d(0, ${(drift * 10).toFixed(2)}%, 0) scale(1.12)`;
+
+        // The title holds while the frame zooms, then eases out over the last
+        // 45% of the zoom, finishing just as the puppy starts to play.
+        // style.css turns --reveal into the title's and the tint's fade.
+        if (zoomBox) {
+          const reveal = smoothstep(clamp01((frameProgress - 0.55) / 0.45)).toFixed(3);
+          if (reveal !== scene.zoomReveal) {
+            scene.zoomReveal = reveal;
+            zoomBox.style.setProperty('--reveal', reveal);
+          }
         }
       }
 
@@ -721,14 +768,16 @@
         scrollFrame = 0;
         const scrollY = window.scrollY;
 
-        // Frame Zoom (scales from 0.45 up to 1.0)
+        // Frame Zoom: scales from 0.45 up to 1.0 over the first ZOOM_PORTION of
+        // the section, then holds at full size while the puppy plays.
         const zoomProgress = clamp01((scrollY - scene.zoomTop) / scene.zoomRange);
+        const frameProgress = clamp01(zoomProgress / ZOOM_PORTION);
         if (zoomBox) {
-          zoomBox.style.transform = `scale(${0.45 + zoomProgress * 0.55})`;
+          zoomBox.style.transform = `scale(${0.45 + frameProgress * 0.55})`;
         }
 
-        // The video inside the zooming frame
-        updateZoomVideo(scrollY, zoomProgress);
+        // The two videos and the title in the zoom section
+        updateZoomScene(scrollY, zoomProgress, frameProgress);
 
         // Horizontal gallery: a sideways slide, with the centre photo in focus
         if (horizontalTrack) {

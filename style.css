@@ -606,13 +606,59 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
    ========================================================================== */
 .frame-zoom-section {
   position: relative;
-  height: 250vh;
+  /* The frame zooms over the first 70% of the scroll (ZOOM_PORTION in
+     index.html), then holds at full size while the puppy video plays. */
+  height: 300vh;
   border-bottom: 2px solid var(--border-subtle);
   transition: border-color 0.6s ease;
 }
 
 /* The empty box that scales up as you scroll */
+/* Matiaz's cat video, behind the whole section and around the frame. The
+   section's page colour shows until it's ready, then it fades in. */
+.zoom-backdrop-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(1.12);
+  pointer-events: none;
+  will-change: transform;
+  transition: opacity 0.6s ease;
+}
+
+.zoom-backdrop-video.is-video-ready {
+  opacity: 1;
+}
+
+/* Once the cat is showing, the section label turns white over a soft dark
+   band so it stays readable on the video. */
+.frame-zoom-section .sticky-viewport::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 10rem;
+  z-index: 1;
+  background: linear-gradient(rgba(0, 0, 0, 0.42), transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.frame-zoom-section .sticky-viewport:has(.zoom-backdrop-video.is-video-ready)::before {
+  opacity: 1;
+}
+
+.frame-zoom-section .sticky-viewport:has(.zoom-backdrop-video.is-video-ready) .section-indicator {
+  color: rgba(255, 255, 255, 0.88);
+}
+
 .zoom-frame-box {
+  --reveal: 0; /* 0 = title showing over a still frame, 1 = title gone, video playing */
+  z-index: 2; /* above the cat */
   position: relative;
   overflow: hidden; /* the video drifts inside the frame, clipped to it */
   width: 100vw;
@@ -657,6 +703,87 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
 .zoom-frame-box.is-video-ready::before {
   opacity: 0;
   animation: none;
+}
+
+/* Tint over the still frame so the title reads; it clears as the title
+   leaves and the puppy starts playing. */
+.zoom-frame-box::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.28) 75%);
+  opacity: calc(1 - var(--reveal));
+  pointer-events: none;
+}
+
+/* PLACEHOLDER TITLE over the still frame. As the frame finishes zooming it
+   eases out (fades, drifts up and opens up slightly), driven by --reveal
+   from the script. Everything scales with the frame, so it grows with it. */
+.zoom-reel-title {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-areas: "title";
+  place-items: center;
+  color: #ffffff;
+  text-align: center;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  opacity: calc(1 - var(--reveal));
+  transform: translateY(calc(var(--reveal) * -6vh)) scale(calc(1 + var(--reveal) * 0.08));
+  will-change: opacity, transform;
+}
+
+/* No title or tint over the loading skeleton; they arrive with the video. */
+.zoom-frame-box:not(.is-video-ready)::after,
+.zoom-frame-box:not(.is-video-ready) .zoom-reel-title {
+  visibility: hidden;
+}
+
+/* Commercial and Weddings versions share the spot and crossfade on a mode
+   switch. */
+.zoom-reel-mode {
+  grid-area: title;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.4vw;
+  transition: opacity 0.6s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body[data-mode="commercial"] .zoom-reel-mode.for-weddings,
+body[data-mode="weddings"] .zoom-reel-mode.for-commercial {
+  opacity: 0;
+  transform: translateY(2vh);
+}
+
+.zoom-reel-kicker {
+  font-family: var(--font-commercial);
+  font-size: clamp(0.9rem, 1.6vw, 1.6rem);
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.zoom-reel-heading {
+  font-family: var(--font-commercial);
+  font-size: clamp(3rem, 9vw, 9.5rem);
+  font-weight: 300;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.for-weddings .zoom-reel-heading {
+  font-family: var(--font-weddings);
+  font-size: clamp(3.5rem, 10.5vw, 11rem);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
