@@ -351,11 +351,9 @@ body[data-mode="commercial"] .mode-text-weddings {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Not clipped, and above the next section: during the HERO HAND-OFF the
-     photo stays pinned mid-screen as the hero scrolls away, landing on top
-     of the video frame as that section arrives. No dividing line either. */
-  overflow: visible;
-  z-index: 3;
+  overflow: hidden;
+  border-bottom: 2px solid var(--border-subtle);
+  transition: border-color 0.6s ease;
 }
 
 /* Space for background image behind the title */
@@ -369,12 +367,6 @@ body[data-mode="commercial"] .mode-text-weddings {
   z-index: 1;
   overflow: hidden;
   transition: background-color 0.6s ease;
-  /* HERO HAND-OFF: as you scroll off the hero, index.html keeps this photo
-     pinned mid-screen and shrinks it to exactly the size and spot of the
-     video frame below, then fades it out as that frame arrives underneath,
-     so the hero photo turns into the video frame. Transform and opacity only. */
-  transform-origin: 50% 50%;
-  will-change: transform;
 }
 
 /* High-resolution photography backdrop cross-fade stack */
@@ -1507,13 +1499,16 @@ body[data-mode="weddings"] .lightbox-title {
 
 /* ==========================================================================
    5. FILM STRIPS SECTION
-   Pins while you scroll: three rows of landscape photos slide sideways at
-   different speeds (the middle row the opposite way), driven by the script
-   in index.html. Transform only, so it stays smooth.
+   Pins while you scroll: three rows of landscape photos slide sideways on
+   their own, forever, at different speeds (the middle row the opposite way).
+   The motion is this animation, not the scroll. Each row holds its photos
+   twice over, and the animation slides it by exactly one set (-50% of the
+   row) before starting again, so the loop has no seam and no end. Transform
+   only, so it stays smooth; index.html pauses the rows off screen.
    ========================================================================== */
 .strips-section {
   position: relative;
-  /* One screen to pin the section, plus 160vh of scrolling for the slide. */
+  /* One screen to pin the section, plus 160vh of scrolling to watch it. */
   height: calc(100vh + 160vh);
   border-bottom: 2px solid var(--border-subtle);
   transition: border-color 0.6s ease;
@@ -1528,10 +1523,37 @@ body[data-mode="weddings"] .lightbox-title {
 
 .strip-row {
   display: flex;
-  gap: clamp(0.75rem, 1.6vw, 1.25rem);
+  /* The space between tiles is each tile's own right margin, not a flex gap:
+     that way one set of photos is an exact half of the row (a gap would be
+     left off the last tile and the loop would jump by that much). */
   width: max-content;
-  align-self: flex-start; /* positioned by the script, from the left edge */
+  align-self: flex-start; /* its own width, sliding from the left edge */
   will-change: transform;
+  /* Each row sets its own --strip-duration (index.html): the slower the
+     duration, the slower the row. Paused until the section is on screen. */
+  animation: strip-slide var(--strip-duration, 60s) linear infinite;
+  animation-play-state: paused;
+}
+
+/* Right-to-left by default; the row marked data-reverse runs the other way
+   (it starts one set in, so the screen is full of photos either way). */
+.strip-row[data-reverse] {
+  animation-direction: reverse;
+}
+
+.strips-section.is-running .strip-row {
+  animation-play-state: running;
+}
+
+@keyframes strip-slide {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    /* Exactly one set of photos: the copy behind it lands where the first
+       set started, so the row repeats without a jump. */
+    transform: translate3d(-50%, 0, 0);
+  }
 }
 
 /* A landscape tile, sized so three rows always fit the screen height. */
@@ -1539,7 +1561,7 @@ body[data-mode="weddings"] .lightbox-title {
   --tile-height: min(26vh, calc(clamp(260px, 26vw, 420px) * 2 / 3));
   position: relative;
   flex: 0 0 auto;
-  margin: 0;
+  margin: 0 clamp(0.75rem, 1.6vw, 1.25rem) 0 0;
   height: var(--tile-height);
   aspect-ratio: 3 / 2;
   overflow: hidden;
@@ -1588,6 +1610,12 @@ body[data-mode="weddings"] .strip-tile:has(.mode-photo-weddings.is-loaded)::befo
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* No sliding rows: the photos simply sit there. */
+  .strip-row,
+  .strips-section.is-running .strip-row {
+    animation: none;
+  }
+
   .strip-tile::before {
     animation: none;
     background: none;
