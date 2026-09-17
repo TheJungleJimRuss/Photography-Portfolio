@@ -108,12 +108,14 @@
           </div>
         </div>
         
-        <!-- The empty frame box that zooms as you scroll -->
+        <!-- The frame that zooms as you scroll, with Matiaz's video inside it.
+             The video fills the frame exactly and drifts a little inside it
+             (parallax). It has no src here on purpose: the script loads it
+             once the visitor starts scrolling, so the 14.7 MB file never
+             slows the first page load. The frame shows a loading skeleton
+             until the video is ready. -->
         <div class="zoom-frame-box">
-          <div class="mode-crossfade-stack">
-            <span class="mode-text-commercial">COMMERCIAL CAMPAIGN REEL</span>
-            <span class="mode-text-weddings">ESTATE CEREMONY MONOGRAPH</span>
-          </div>
+          <video class="zoom-video" data-src="Puppy.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
         </div>
       </div>
     </section>
@@ -670,74 +672,48 @@
         }
       }
 
-      // BACKGROUND VIDEOS (Matiaz's parallax, ported from his copy of the
-      // site): in Commercial mode two videos play behind the page. While the
-      // frame zooms, the cat fills the screen around it and the puppy shows
-      // through the frame itself, cropped to the frame so it opens up as the
-      // frame grows; both drift a little slower than the page. Once the photo
-      // row begins, the puppy fills the screen behind the row. They are 8 MB
-      // and 14.7 MB, so neither starts downloading until the visitor starts
-      // scrolling (never at page load, where they would compete with the hero
-      // photo), and each only plays while it is on screen. Weddings mode and
-      // reduced-motion visitors never load them. Built here because they only
-      // work with the script.
-      function createBackgroundVideo(className, src, before) {
-        const el = document.createElement('video');
-        el.className = `background-video ${className}`;
-        el.muted = true;
-        el.loop = true;
-        el.playsInline = true;
-        el.preload = 'none';
-        el.setAttribute('muted', '');
-        el.setAttribute('playsinline', '');
-        el.setAttribute('aria-hidden', 'true');
-        document.body.insertBefore(el, before || document.body.firstChild);
-        return { el, src, shown: null };
+      // ZOOM VIDEO (Matiaz's parallax): one video inside the zooming frame,
+      // filling it exactly (cropped, never stretched) and drifting a little
+      // inside it as you scroll. It is 14.7 MB, so it only starts downloading
+      // once the visitor has started scrolling (never at page load, where it
+      // would compete with the hero photo), and only plays while its section
+      // is on screen. Until it can play, the frame shows a loading skeleton.
+      // Reduced-motion visitors still see it, but paused and without drift.
+      const zoomVideo = zoomBox ? zoomBox.querySelector('.zoom-video') : null;
+      let zoomVideoPlaying = null;
+
+      if (zoomVideo) {
+        const markReady = () => zoomBox.classList.add('is-video-ready');
+        zoomVideo.addEventListener('loadeddata', markReady);
+        if (zoomVideo.readyState >= 2) markReady();
       }
 
-      // Videos paint in page order, so the cat goes in before the puppy and
-      // the puppy sits on top of it.
-      const puppyVideo = createBackgroundVideo('puppy-background-video', 'Puppy.mp4');
-      const catVideo = createBackgroundVideo('zoom-background-video', 'CATCAT.mp4', puppyVideo.el);
-
-      // Load a background video (once allowed) and play it only while shown.
-      function driveBackgroundVideo(video, canLoad, show) {
-        if (canLoad && !video.el.getAttribute('src')) {
-          video.el.preload = 'auto';
-          video.el.src = video.src;
-        }
-        if (show !== video.shown) {
-          video.shown = show;
-          video.el.classList.toggle('is-active', show);
-          if (show) video.el.play().catch(() => {});
-          else video.el.pause();
-        }
-      }
-
-      function updateBackgroundVideos(scrollY, zoomProgress) {
+      function updateZoomVideo(scrollY, zoomProgress) {
+        if (!zoomVideo) return;
         const viewportHeight = window.innerHeight;
-        const zoomEnd = scene.zoomTop + scene.zoomRange + viewportHeight;
-        const rowEnd = scene.galleryTop + scene.galleryRange + viewportHeight;
-        const inZoom = scrollY + viewportHeight > scene.zoomTop && scrollY < zoomEnd;
-        const inRow = scrollY >= scene.galleryTop && scrollY < rowEnd;
-        const wanted = body.getAttribute('data-mode') !== 'weddings' && !motionStill.matches;
+        const onScreen = scrollY + viewportHeight > scene.zoomTop
+          && scrollY < scene.zoomTop + scene.zoomRange + viewportHeight;
+
         // Start downloading once the visitor has started scrolling and the
-        // zoom section is within about a screen (so never at page load).
-        const canLoad = wanted && scrollY > 0 && scrollY + viewportHeight * 2 > scene.zoomTop;
-
-        driveBackgroundVideo(catVideo, canLoad, wanted && inZoom);
-        driveBackgroundVideo(puppyVideo, canLoad, wanted && (inZoom || inRow));
-
-        if (catVideo.shown) {
-          catVideo.el.style.transform = `translate3d(0, ${((0.5 - zoomProgress) * viewportHeight * 0.08).toFixed(1)}px, 0) scale(1.12)`;
+        // section is within about a screen (so never at page load).
+        if (!zoomVideo.getAttribute('src') && scrollY > 0 && scrollY + viewportHeight * 2 > scene.zoomTop) {
+          zoomVideo.preload = 'auto';
+          zoomVideo.src = zoomVideo.dataset.src;
         }
-        if (puppyVideo.shown) {
-          // In the zoom section the puppy's crop matches the frame (45% up to
-          // full size); from the photo row on it fills the screen.
-          const progress = inRow ? 1 : zoomProgress;
-          const inset = ((1 - (0.45 + progress * 0.55)) * 50).toFixed(2);
-          puppyVideo.el.style.clipPath = `inset(${inset}% ${inset}%)`;
-          puppyVideo.el.style.transform = `translate3d(0, ${((0.5 - progress) * viewportHeight * 0.1).toFixed(1)}px, 0) scale(1.12)`;
+
+        const play = onScreen && !motionStill.matches;
+        if (play !== zoomVideoPlaying) {
+          zoomVideoPlaying = play;
+          if (play) zoomVideo.play().catch(() => {});
+          else zoomVideo.pause();
+        }
+
+        // Parallax: the video drifts up inside the frame as you scroll. It is
+        // scaled 1.12 (6% spare on each side), and the drift stays within ±5%
+        // of the frame's height, so its edges never show.
+        if (onScreen) {
+          const drift = motionStill.matches ? 0 : (0.5 - zoomProgress) * 10;
+          zoomVideo.style.transform = `translate3d(0, ${drift.toFixed(2)}%, 0) scale(1.12)`;
         }
       }
 
@@ -751,8 +727,8 @@
           zoomBox.style.transform = `scale(${0.45 + zoomProgress * 0.55})`;
         }
 
-        // Background videos, behind the zooming frame and the photo row
-        updateBackgroundVideos(scrollY, zoomProgress);
+        // The video inside the zooming frame
+        updateZoomVideo(scrollY, zoomProgress);
 
         // Horizontal gallery: a sideways slide, with the centre photo in focus
         if (horizontalTrack) {
