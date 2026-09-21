@@ -682,28 +682,6 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
   opacity: 1;
 }
 
-/* Once the cat is showing, the section label turns white over a soft dark
-   band so it stays readable on the video. */
-.frame-zoom-section .sticky-viewport::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 10rem;
-  z-index: 1;
-  background: linear-gradient(rgba(0, 0, 0, 0.42), transparent);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.6s ease;
-}
-
-.frame-zoom-section .sticky-viewport:has(.zoom-backdrop-video.is-video-ready)::before {
-  opacity: 1;
-}
-
-.frame-zoom-section .sticky-viewport:has(.zoom-backdrop-video.is-video-ready) .section-indicator {
-  color: rgba(255, 255, 255, 0.88);
-}
-
 .zoom-frame-box {
   --reveal: 0; /* 0 = title showing over a still frame, 1 = title gone, video playing */
   z-index: 2; /* above the cat */
@@ -1332,8 +1310,12 @@ html.lightbox-open {
   margin: 0;
   padding: clamp(0.75rem, 2vw, 1.5rem);
   border: 0;
-  background-color: rgba(12, 12, 12, 0.95);
-  color: #ffffff;
+  /* A light frosted pane rather than a dark one: the page stays faintly
+     visible, blurred, behind the photo. */
+  background-color: rgba(251, 251, 251, 0.78);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  color: var(--text-main);
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: clamp(0.5rem, 2vw, 1.5rem);
@@ -1345,11 +1327,16 @@ html.lightbox-open {
 }
 
 body[data-mode="weddings"] .lightbox {
-  background-color: rgba(30, 24, 20, 0.96); /* warm espresso in Weddings mode */
+  background-color: rgba(250, 246, 240, 0.8); /* warm alabaster in Weddings mode */
 }
 
 .lightbox::backdrop {
-  background: transparent; /* the dialog itself is the dark backdrop */
+  background: transparent; /* the dialog itself is the frosted backdrop */
+}
+
+/* The photo gets a soft shadow so it lifts off the light pane. */
+.lightbox-photo {
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.35);
 }
 
 .lightbox-figure {
@@ -1395,8 +1382,8 @@ body[data-mode="weddings"] .lightbox {
   position: absolute;
   inset: 12% 22%;
   border-radius: 2px;
-  background-color: rgba(255, 255, 255, 0.08);
-  background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.12) 50%, transparent 80%);
+  background-color: var(--bg-box);
+  background-image: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.5) 50%, transparent 80%);
   background-size: 200% 100%;
   background-repeat: no-repeat;
   animation: lightbox-sweep 1.4s ease-in-out infinite;
@@ -1443,10 +1430,10 @@ body[data-mode="weddings"] .lightbox-title {
   place-items: center;
   width: 44px;
   height: 44px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  border: 1px solid var(--border-subtle);
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.06);
-  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.7);
+  color: var(--text-main);
   font-size: 1.6rem;
   line-height: 1;
   cursor: pointer;
@@ -1454,12 +1441,12 @@ body[data-mode="weddings"] .lightbox-title {
 }
 
 .lightbox-button:hover {
-  background-color: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.5);
+  background-color: #ffffff;
+  border-color: var(--text-muted);
 }
 
 .lightbox-button:focus-visible {
-  outline: 2px solid #ffffff;
+  outline: 2px solid var(--text-main);
   outline-offset: 3px;
 }
 
@@ -1507,6 +1494,135 @@ body[data-mode="weddings"] .lightbox-title {
   .lightbox[open] .lightbox-figure,
   .lightbox-frame.is-loading::before {
     animation: none;
+  }
+}
+
+/* ==========================================================================
+   5. FILM STRIPS SECTION
+   Pins while you scroll: three rows of landscape photos slide sideways on
+   their own, forever, at different speeds (the middle row the opposite way).
+   The motion is this animation, not the scroll. Each row holds its photos
+   twice over, and the animation slides it by exactly one set (-50% of the
+   row) before starting again, so the loop has no seam and no end. Transform
+   only, so it stays smooth; index.html pauses the rows off screen.
+   ========================================================================== */
+.strips-section {
+  position: relative;
+  /* One screen to pin the section, plus 160vh of scrolling to watch it. */
+  height: calc(100vh + 160vh);
+  border-bottom: 2px solid var(--border-subtle);
+  transition: border-color 0.6s ease;
+}
+
+.strips {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.75rem, 1.6vw, 1.25rem);
+  width: 100%;
+}
+
+.strip-row {
+  display: flex;
+  /* The space between tiles is each tile's own right margin, not a flex gap:
+     that way one set of photos is an exact half of the row (a gap would be
+     left off the last tile and the loop would jump by that much). */
+  width: max-content;
+  align-self: flex-start; /* its own width, sliding from the left edge */
+  will-change: transform;
+  /* Each row sets its own --strip-duration (index.html): the slower the
+     duration, the slower the row. Paused until the section is on screen. */
+  animation: strip-slide var(--strip-duration, 60s) linear infinite;
+  animation-play-state: paused;
+}
+
+/* Right-to-left by default; the row marked data-reverse runs the other way
+   (it starts one set in, so the screen is full of photos either way). */
+.strip-row[data-reverse] {
+  animation-direction: reverse;
+}
+
+.strips-section.is-running .strip-row {
+  animation-play-state: running;
+}
+
+@keyframes strip-slide {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    /* Exactly one set of photos: the copy behind it lands where the first
+       set started, so the row repeats without a jump. */
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* A landscape tile, sized so three rows always fit the screen height. */
+.strip-tile {
+  --tile-height: min(26vh, calc(clamp(260px, 26vw, 420px) * 2 / 3));
+  position: relative;
+  flex: 0 0 auto;
+  margin: 0 clamp(0.75rem, 1.6vw, 1.25rem) 0 0;
+  height: var(--tile-height);
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: 3px;
+  background-color: var(--bg-box); /* skeleton grey until the photo loads */
+  transition: background-color 0.6s ease;
+}
+
+.strip-tile img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body[data-mode="commercial"] .strip-tile .mode-photo-weddings,
+body[data-mode="weddings"] .strip-tile .mode-photo-commercial {
+  opacity: 0;
+}
+
+/* A little life on hover (the tiles open large when clicked). */
+@media (hover: hover) {
+  .strip-tile:hover img {
+    transform: scale(1.04);
+  }
+}
+
+/* Loading skeleton: a highlight sweeps across the grey tile until the photo
+   for the current mode has loaded (index.html tags it .is-loaded). */
+.strip-tile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.5) 50%, transparent 80%);
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+body[data-mode="commercial"] .strip-tile:has(.mode-photo-commercial.is-loaded)::before,
+body[data-mode="weddings"] .strip-tile:has(.mode-photo-weddings.is-loaded)::before {
+  opacity: 0;
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No sliding rows: the photos simply sit there. */
+  .strip-row,
+  .strips-section.is-running .strip-row {
+    animation: none;
+  }
+
+  .strip-tile::before {
+    animation: none;
+    background: none;
+  }
+
+  .strip-tile img {
+    transition: opacity 0.6s ease;
   }
 }
 
