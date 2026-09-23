@@ -52,12 +52,14 @@
       </nav>
     </header>
 
+    <!-- ===================================================================
+         1. HERO SECTION (Full Viewport: 100vw x 100vh)
+         =================================================================== -->
+    <!-- Jimmy's page wheel (transitions.js) swaps what is inside
+         #page-content when you move between Portfolio, About and Contact. -->
     <div id="page-stage">
       <div id="page-content" class="page-panel" data-page="portfolio">
-        <!-- ===================================================================
-             1. HERO SECTION (Full Viewport: 100vw x 100vh)
-             =================================================================== -->
-        <header class="hero-container" id="hero">
+    <header class="hero-container" id="hero">
       <!-- Space for background image taking up entire viewport -->
       <div class="hero-image-space">
         <!-- Dual-World Photography Stack (Full, untouched photo) -->
@@ -67,7 +69,7 @@
           <img
             src="images/editorial_fashion.jpg"
             alt="Commercial Editorial Portfolio"
-            class="hero-photo photo-commercial"
+            class="hero-photo photo-commercial is-active"
             fetchpriority="high"
           />
           <img
@@ -103,18 +105,32 @@
          =================================================================== -->
     <section class="frame-zoom-section" id="zoom-reel">
       <div class="sticky-viewport">
-        <div class="section-indicator">
-          <div class="mode-crossfade-stack">
-            <span class="mode-text-commercial">Scroll Effect: Frame Zoom (Brand Campaign Showcase)</span>
-            <span class="mode-text-weddings">Scroll Effect: Frame Zoom (Featured Estate Ceremony)</span>
-          </div>
-        </div>
+        <!-- Matiaz's cat video plays behind the whole section, around the
+             frame. Like the puppy below, the script gives it its src once the
+             visitor starts scrolling. -->
+        <video class="zoom-backdrop-video" data-src="CATCAT.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+
         
-        <!-- The empty frame box that zooms as you scroll -->
+        <!-- The frame that zooms as you scroll, with Matiaz's puppy video
+             inside it. The video fills the frame exactly and drifts a little
+             inside it (parallax). It holds on a still frame under the title
+             while the frame zooms, and starts playing once it is fully zoomed
+             in, as the title eases out. It has no src here on purpose: the
+             script loads it once the visitor starts scrolling, so the 14.7 MB
+             file never slows the first page load. The frame shows a loading
+             skeleton until the video is ready.
+             PLACEHOLDER TITLE: swap in the real reel's name. -->
         <div class="zoom-frame-box">
-          <div class="mode-crossfade-stack">
-            <span class="mode-text-commercial">COMMERCIAL CAMPAIGN REEL</span>
-            <span class="mode-text-weddings">ESTATE CEREMONY MONOGRAPH</span>
+          <video class="zoom-video" data-src="Puppy.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+          <div class="zoom-reel-title">
+            <div class="zoom-reel-mode for-commercial">
+              <p class="zoom-reel-kicker">Commercial Stills &amp; Film</p>
+              <h2 class="zoom-reel-heading">Campaign Reel</h2>
+            </div>
+            <div class="zoom-reel-mode for-weddings">
+              <p class="zoom-reel-kicker">Private Estates &amp; Ceremonies</p>
+              <h2 class="zoom-reel-heading">Estate Ceremony</h2>
+            </div>
           </div>
         </div>
       </div>
@@ -359,6 +375,222 @@
       </div>
     </section>
 
+    <!-- ===================================================================
+         5. FILM STRIPS SECTION
+         Pins while you scroll: three rows of landscape photos slide sideways
+         on their own, forever. The top and bottom rows run left at different
+         speeds, the middle row runs right, faster. Each row holds one set of
+         photos plus an identical copy (marked data-copy, hidden from screen
+         readers), and style.css slides it by exactly one set before looping,
+         so the motion never jumps. index.html only pauses the rows when the
+         section is off screen.
+         PLACEHOLDER PHOTOS: the gallery's stand-ins (credited in README.md).
+         =================================================================== -->
+    <section class="strips-section" id="strips">
+      <div class="sticky-viewport">
+        <div class="strips">
+          <div class="strip-row" style="--strip-duration: 62s">
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/architecture_pavilion.jpg" alt="Campaign" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Villa_Balbianello_on_Como_Lake_8.jpg/1280px-Villa_Balbianello_on_Como_Lake_8.jpg" alt="Lake Como" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg/1280px-Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg" alt="Brand Film" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/ceremony_estate.jpg" alt="The Ceremony" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Runway_show_pexels.jpg/1280px-Runway_show_pexels.jpg" alt="Runway" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/wedding_ephrussi.jpg" alt="Details &amp; Veil" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/minimal_interior.jpg" alt="Editorial" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Sweet_Embrace_%28163554735%29.jpeg/1280px-Sweet_Embrace_%28163554735%29.jpeg" alt="Sunset Dance" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/editorial_fashion.jpg" alt="Lookbook" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Wedding_reception_tables_and_benches_%28Unsplash%29.jpg/1280px-Wedding_reception_tables_and_benches_%28Unsplash%29.jpg" alt="Reception" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/botanical_macro.jpg" alt="Still Life" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/portrait_elena.jpg" alt="Portraits" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/architecture_pavilion.jpg" alt="Campaign" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Villa_Balbianello_on_Como_Lake_8.jpg/1280px-Villa_Balbianello_on_Como_Lake_8.jpg" alt="Lake Como" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg/1280px-Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg" alt="Brand Film" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/ceremony_estate.jpg" alt="The Ceremony" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/architecture_pavilion.jpg" alt="Campaign" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Villa_Balbianello_on_Como_Lake_8.jpg/1280px-Villa_Balbianello_on_Como_Lake_8.jpg" alt="Lake Como" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg/1280px-Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg" alt="Brand Film" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/ceremony_estate.jpg" alt="The Ceremony" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Runway_show_pexels.jpg/1280px-Runway_show_pexels.jpg" alt="Runway" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/wedding_ephrussi.jpg" alt="Details &amp; Veil" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/minimal_interior.jpg" alt="Editorial" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Sweet_Embrace_%28163554735%29.jpeg/1280px-Sweet_Embrace_%28163554735%29.jpeg" alt="Sunset Dance" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/editorial_fashion.jpg" alt="Lookbook" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Wedding_reception_tables_and_benches_%28Unsplash%29.jpg/1280px-Wedding_reception_tables_and_benches_%28Unsplash%29.jpg" alt="Reception" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/botanical_macro.jpg" alt="Still Life" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/portrait_elena.jpg" alt="Portraits" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/architecture_pavilion.jpg" alt="Campaign" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Villa_Balbianello_on_Como_Lake_8.jpg/1280px-Villa_Balbianello_on_Como_Lake_8.jpg" alt="Lake Como" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg/1280px-Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg" alt="Brand Film" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/ceremony_estate.jpg" alt="The Ceremony" loading="lazy" decoding="async" />
+            </figure>
+          </div>
+          <div class="strip-row" style="--strip-duration: 44s" data-reverse="true">
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Runway_show_pexels.jpg/1280px-Runway_show_pexels.jpg" alt="Runway" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/wedding_ephrussi.jpg" alt="Details &amp; Veil" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg/1280px-Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg" alt="Brand Film" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/ceremony_estate.jpg" alt="The Ceremony" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/architecture_pavilion.jpg" alt="Campaign" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Villa_Balbianello_on_Como_Lake_8.jpg/1280px-Villa_Balbianello_on_Como_Lake_8.jpg" alt="Lake Como" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/botanical_macro.jpg" alt="Still Life" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/portrait_elena.jpg" alt="Portraits" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/editorial_fashion.jpg" alt="Lookbook" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Wedding_reception_tables_and_benches_%28Unsplash%29.jpg/1280px-Wedding_reception_tables_and_benches_%28Unsplash%29.jpg" alt="Reception" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/minimal_interior.jpg" alt="Editorial" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Sweet_Embrace_%28163554735%29.jpeg/1280px-Sweet_Embrace_%28163554735%29.jpeg" alt="Sunset Dance" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Runway_show_pexels.jpg/1280px-Runway_show_pexels.jpg" alt="Runway" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/wedding_ephrussi.jpg" alt="Details &amp; Veil" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg/1280px-Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg" alt="Brand Film" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/ceremony_estate.jpg" alt="The Ceremony" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Runway_show_pexels.jpg/1280px-Runway_show_pexels.jpg" alt="Runway" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/wedding_ephrussi.jpg" alt="Details &amp; Veil" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg/1280px-Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg" alt="Brand Film" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/ceremony_estate.jpg" alt="The Ceremony" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/architecture_pavilion.jpg" alt="Campaign" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Villa_Balbianello_on_Como_Lake_8.jpg/1280px-Villa_Balbianello_on_Como_Lake_8.jpg" alt="Lake Como" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/botanical_macro.jpg" alt="Still Life" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/portrait_elena.jpg" alt="Portraits" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/editorial_fashion.jpg" alt="Lookbook" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Wedding_reception_tables_and_benches_%28Unsplash%29.jpg/1280px-Wedding_reception_tables_and_benches_%28Unsplash%29.jpg" alt="Reception" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/minimal_interior.jpg" alt="Editorial" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Sweet_Embrace_%28163554735%29.jpeg/1280px-Sweet_Embrace_%28163554735%29.jpeg" alt="Sunset Dance" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Runway_show_pexels.jpg/1280px-Runway_show_pexels.jpg" alt="Runway" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/wedding_ephrussi.jpg" alt="Details &amp; Veil" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg/1280px-Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg" alt="Brand Film" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/ceremony_estate.jpg" alt="The Ceremony" loading="lazy" decoding="async" />
+            </figure>
+          </div>
+          <div class="strip-row" style="--strip-duration: 82s">
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/editorial_fashion.jpg" alt="Lookbook" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Wedding_reception_tables_and_benches_%28Unsplash%29.jpg/1280px-Wedding_reception_tables_and_benches_%28Unsplash%29.jpg" alt="Reception" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/botanical_macro.jpg" alt="Still Life" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/portrait_elena.jpg" alt="Portraits" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/architecture_pavilion.jpg" alt="Campaign" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Villa_Balbianello_on_Como_Lake_8.jpg/1280px-Villa_Balbianello_on_Como_Lake_8.jpg" alt="Lake Como" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg/1280px-Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg" alt="Brand Film" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/ceremony_estate.jpg" alt="The Ceremony" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Runway_show_pexels.jpg/1280px-Runway_show_pexels.jpg" alt="Runway" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/wedding_ephrussi.jpg" alt="Details &amp; Veil" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/minimal_interior.jpg" alt="Editorial" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Sweet_Embrace_%28163554735%29.jpeg/1280px-Sweet_Embrace_%28163554735%29.jpeg" alt="Sunset Dance" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/editorial_fashion.jpg" alt="Lookbook" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Wedding_reception_tables_and_benches_%28Unsplash%29.jpg/1280px-Wedding_reception_tables_and_benches_%28Unsplash%29.jpg" alt="Reception" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile">
+              <img class="mode-photo-commercial" src="images/botanical_macro.jpg" alt="Still Life" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/portrait_elena.jpg" alt="Portraits" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/editorial_fashion.jpg" alt="Lookbook" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Wedding_reception_tables_and_benches_%28Unsplash%29.jpg/1280px-Wedding_reception_tables_and_benches_%28Unsplash%29.jpg" alt="Reception" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/botanical_macro.jpg" alt="Still Life" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/portrait_elena.jpg" alt="Portraits" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/architecture_pavilion.jpg" alt="Campaign" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Villa_Balbianello_on_Como_Lake_8.jpg/1280px-Villa_Balbianello_on_Como_Lake_8.jpg" alt="Lake Como" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg/1280px-Making_of_ILLUSION_INFINITY%2C_director_Roger_Steinmann%2C_sitting%2C_with_crew_filming_in_Death_Valley.jpg" alt="Brand Film" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/ceremony_estate.jpg" alt="The Ceremony" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Runway_show_pexels.jpg/1280px-Runway_show_pexels.jpg" alt="Runway" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/wedding_ephrussi.jpg" alt="Details &amp; Veil" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/minimal_interior.jpg" alt="Editorial" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Sweet_Embrace_%28163554735%29.jpeg/1280px-Sweet_Embrace_%28163554735%29.jpeg" alt="Sunset Dance" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/editorial_fashion.jpg" alt="Lookbook" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Wedding_reception_tables_and_benches_%28Unsplash%29.jpg/1280px-Wedding_reception_tables_and_benches_%28Unsplash%29.jpg" alt="Reception" loading="lazy" decoding="async" />
+            </figure>
+            <figure class="strip-tile" aria-hidden="true" data-copy="true">
+              <img class="mode-photo-commercial" src="images/botanical_macro.jpg" alt="Still Life" loading="lazy" decoding="async" />
+              <img class="mode-photo-weddings" src="images/portrait_elena.jpg" alt="Portraits" loading="lazy" decoding="async" />
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Footer / Inquiries Section -->
     <footer class="footer-spacer" id="contact">
       <div class="mode-crossfade-stack">
@@ -366,18 +598,14 @@
         <p class="mode-text-weddings">Private Ceremony Commissions & Monograph Archives — weddings@glowcreative.co</p>
       </div>
     </footer>
+
+
+    <!-- ===================================================================
+         INTERACTIVE LOGIC: TOGGLE SWITCH + SCROLL EFFECTS + ADAPTIVE CONTRAST
+         =================================================================== -->
       </div>
     </div>
 
-
-    <!-- Editorial Floating Overlay Scrollbar (100% transparent track) -->
-    <div class="floating-scrollbar" id="floating-scrollbar" aria-hidden="true">
-      <div class="floating-scrollbar-track">
-        <div class="floating-scrollbar-thumb"></div>
-      </div>
-    </div>
-
-    <!-- Rotational Wheel Page Transitions Router & Portfolio Controller -->
     <script type="module" src="transitions.js"></script>
   </body>
 </html>

@@ -1,424 +1,909 @@
 /**
  * portfolio.js
- * Glow Creative Co. — Portfolio Page Interactions
+ * Glow Creative Co. — everything the Portfolio page itself does.
  *
- * Handles:
- * 1. Dual-World Mode Switcher (Commercial / Weddings) with event delegation
- * 2. Adaptive Background Luminance Contrast Detection
- * 3. Smooth Navigation & Scroll Restoration
- * 4. Pinned Scroll Scenes: Hero Zoom, Horizontal Gallery (Darkroom Develop), Print Stack
- * 5. Lifecycle Management (initPortfolioPage / destroyPortfolioPage)
+ * This is the page's own script, the same code index.html used to carry
+ * inline, wrapped in the lifecycle transitions.js needs:
+ *   initPortfolioPage()    — the page's markup is in the DOM, wire it up
+ *   destroyPortfolioPage() — the page is being swapped out, let go of it
+ *
+ * Covers: the Commercial / Weddings switch and its block curtain, the navbar
+ * contrast, the zoom section and its two videos, the horizontal gallery's
+ * darkroom develop, the print stack, the sliding photo rows, photo loading
+ * with skeletons, and the lightbox.
+ *
+ * Everything the page hangs on something longer-lived than its own markup
+ * (window, document, the navbar, the lightbox) is registered with the page's
+ * abort signal, so destroyPortfolioPage() takes all of it back off again.
  */
 
 import { updateScrollbar } from './scrollbar.js';
 
-let cleanupPortfolio = null;
-let scrollFrame = 0;
+let teardown = null;
+let pageSetMode = null;
 
 export function destroyPortfolioPage() {
-  if (typeof cleanupPortfolio === 'function') {
-    cleanupPortfolio();
-    cleanupPortfolio = null;
+  if (teardown) {
+    teardown();
+    teardown = null;
+    pageSetMode = null;
   }
 }
 
-// Global mode switching accessible across pages and transitions
-export function setMode(mode) {
-  const body = document.body;
-  if (body.getAttribute('data-mode') === mode) return;
-
-  body.setAttribute('data-mode', mode);
-  document.documentElement.setAttribute('data-mode', mode);
-
-  // Update all toggle buttons currently in DOM
-  document.querySelectorAll('.toggle-btn').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.target === mode);
-  });
-
-  updateNavbarContrast();
-  updateScrollbar();
-
-  // Redraw scroll scenes for newly active mode
-  if (typeof triggerScrollRender === 'function') {
-    triggerScrollRender();
-  }
-}
-
-// Global click delegation for mode buttons (resilient to DOM replacement)
+// The navbar lives outside the panel that transitions.js swaps, and it rebuilds
+// the mode tabs as it goes, so the tabs are handled here — once, by delegation,
+// on whichever buttons happen to be in the navbar at the time.
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.toggle-btn');
-  if (btn && btn.dataset.target) {
-    setMode(btn.dataset.target);
-  }
+  if (btn && btn.dataset.target && pageSetMode) pageSetMode(btn.dataset.target);
 });
-
-// Smooth scroll to top when clicking Portfolio while already on home page
-document.addEventListener('click', (e) => {
-  const link = e.target.closest('#nav-portfolio');
-  if (link && !document.body.classList.contains('subpage')) {
-    e.preventDefault();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-});
-
-// Adaptive luminance cache and sampler
-const luminanceCache = new Map();
-
-export function updateNavbarContrast() {
-  const body = document.body;
-  const siteHeader = document.getElementById('site-header');
-  const navGroupLeft = document.getElementById('nav-group-left');
-  const navGroupRight = document.getElementById('nav-group-right');
-  const photoCommercial = document.querySelector('.photo-commercial');
-  const photoWeddings = document.querySelector('.photo-weddings');
-
-  const mode = body.getAttribute('data-mode') || 'commercial';
-  const activeImg = mode === 'weddings' ? photoWeddings : photoCommercial;
-
-  // Defaults while image loads
-  if (mode === 'commercial') {
-    if (siteHeader) siteHeader.setAttribute('data-nav-tone', 'dark');
-    if (navGroupLeft) navGroupLeft.setAttribute('data-tone', 'dark');
-    if (navGroupRight) navGroupRight.setAttribute('data-tone', 'dark');
-  } else {
-    if (siteHeader) siteHeader.setAttribute('data-nav-tone', 'light');
-    if (navGroupLeft) navGroupLeft.setAttribute('data-tone', 'light');
-    if (navGroupRight) navGroupRight.setAttribute('data-tone', 'light');
-  }
-
-  if (!activeImg) return;
-
-  if (!activeImg.complete || activeImg.naturalWidth === 0) {
-    activeImg.addEventListener('load', updateNavbarContrast, { once: true });
-    return;
-  }
-
-  const cacheKey = activeImg.currentSrc || activeImg.src;
-  let lumData = luminanceCache.get(cacheKey);
-
-  if (!lumData) {
-    try {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      if (ctx) {
-        const sampleW = 60;
-        const sampleH = 16;
-        canvas.width = sampleW;
-        canvas.height = sampleH;
-
-        ctx.drawImage(
-          activeImg,
-          0, 0, activeImg.naturalWidth, Math.max(1, Math.floor(activeImg.naturalHeight * 0.15)),
-          0, 0, sampleW, sampleH
-        );
-
-        const imgData = ctx.getImageData(0, 0, sampleW, sampleH).data;
-        let leftLumSum = 0, leftCount = 0;
-        let rightLumSum = 0, rightCount = 0;
-        let totalLumSum = 0, totalCount = 0;
-
-        for (let y = 0; y < sampleH; y++) {
-          for (let x = 0; x < sampleW; x++) {
-            const idx = (y * sampleW + x) * 4;
-            const r = imgData[idx];
-            const g = imgData[idx + 1];
-            const b = imgData[idx + 2];
-            const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-
-            totalLumSum += lum;
-            totalCount++;
-
-            if (x < sampleW * 0.35) {
-              leftLumSum += lum;
-              leftCount++;
-            } else if (x > sampleW * 0.55) {
-              rightLumSum += lum;
-              rightCount++;
-            }
-          }
-        }
-
-        const avgLum = totalLumSum / (totalCount || 1);
-        const leftAvg = leftCount > 0 ? leftLumSum / leftCount : avgLum;
-        const rightAvg = rightCount > 0 ? rightLumSum / rightCount : avgLum;
-
-        lumData = {
-          overall: avgLum < 140 ? 'light' : 'dark',
-          left: leftAvg < 140 ? 'light' : 'dark',
-          right: rightAvg < 140 ? 'light' : 'dark',
-        };
-
-        luminanceCache.set(cacheKey, lumData);
-      }
-    } catch (e) {
-      // Fallback to defaults on CORS / canvas error
-    }
-  }
-
-  if (lumData) {
-    if (siteHeader) siteHeader.setAttribute('data-nav-tone', lumData.overall);
-    if (navGroupLeft) navGroupLeft.setAttribute('data-tone', lumData.left);
-    if (navGroupRight) navGroupRight.setAttribute('data-tone', lumData.right);
-  }
-}
-
-let triggerScrollRender = null;
 
 export function initPortfolioPage() {
   destroyPortfolioPage();
 
-  const body = document.body;
-  const siteHeader = document.getElementById('site-header');
-  const zoomSection = document.querySelector('.frame-zoom-section');
-  const zoomBox = document.querySelector('.zoom-frame-box');
-  const horizontalSection = document.querySelector('.horizontal-scroll-section');
-  const horizontalTrack = document.querySelector('.horizontal-track');
-  const galleryFrames = Array.from(document.querySelectorAll('.image-box'));
-  const stackSection = document.querySelector('.stack-section');
-  const stackCard = document.querySelector('.stack-card');
-  const stackPile = document.querySelector('.stack-prints');
-  const stackPrints = Array.from(document.querySelectorAll('.stack-print'));
-  const stackTexts = Array.from(document.querySelectorAll('.stack-text'));
-  const stackCounter = document.querySelector('.stack-counter-current');
-  const motionStill = window.matchMedia('(prefers-reduced-motion: reduce)');
+  // Cut every long-lived listener loose when the page is swapped out.
+  const pageLife = new AbortController();
+  const signal = pageLife.signal;
 
-  // Skeleton loading tags
-  document.querySelectorAll('.hero-photo, .image-box-media img, .stack-print img').forEach((img) => {
-    if (img.complete && img.naturalWidth > 0) {
-      img.classList.add('is-loaded');
-    } else {
-      img.addEventListener('load', () => {
-        img.classList.add('is-loaded');
-        onScroll();
-      }, { once: true });
-    }
-  });
+      // 1. DUAL-WORLD MODE TOGGLE LOGIC
+      const toggleButtons = document.querySelectorAll('.toggle-btn');
+      const body = document.body;
+      const siteHeader = document.getElementById('site-header');
+      const navGroupLeft = document.querySelector('.nav-group-left');
+      const navGroupRight = document.querySelector('.nav-group-right');
+      const photoCommercial = document.querySelector('.photo-commercial');
+      const photoWeddings = document.querySelector('.photo-weddings');
 
-  const DEVELOP_HOLD = 0.25;
-  const DEVELOP_FADE = 0.9;
-  const STACK_HOLD = 1;
-  const STACK_LIFT = 1;
-  const PILE_TILT = [-3, 2.5, -1.5, 3, -2, 1.5];
-  const PILE_NUDGE = [[-6, 8], [7, 5], [-4, 10], [6, 7], [-7, 6], [4, 9]];
-  const PILE_SCALE = 0.96;
-  const LIFT_SWING = 40;
-  const LIFT_TILT = -8;
+      // 2. ADAPTIVE BACKGROUND LUMINANCE DETECTION
+      // Samples the top section of the active photograph where the navbar floats.
+      // Automatically inverts text: light text on dark imagery, dark text on light imagery.
+      const luminanceCache = new Map();
 
-  const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
-  const easeInCubic = (t) => t * t * t;
-  const smoothstep = (t) => t * t * (3 - 2 * t);
-  const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+      function updateNavbarContrast() {
+        const mode = body.getAttribute('data-mode') || 'commercial';
+        const activeImg = mode === 'weddings' ? photoWeddings : photoCommercial;
 
-  function buildStackSteps(count) {
-    if (count <= 0) return [];
-    const steps = [];
-    for (let i = 0; i < count; i++) {
-      steps.push({ print: i, kind: 'hold', share: STACK_HOLD });
-      if (i < count - 1) steps.push({ print: i, kind: 'lift', share: STACK_LIFT });
-    }
-    const total = steps.reduce((sum, s) => sum + s.share, 0);
-    let at = 0;
-    for (const step of steps) {
-      step.start = at / total;
-      at += step.share;
-      step.end = at / total;
-    }
-    return steps;
-  }
+        // Sensible instant defaults while image loads
+        if (mode === 'commercial') {
+          // Commercial studio image is high-key light -> dark text
+          if (siteHeader) siteHeader.setAttribute('data-nav-tone', 'dark');
+          if (navGroupLeft) navGroupLeft.setAttribute('data-tone', 'dark');
+          if (navGroupRight) navGroupRight.setAttribute('data-tone', 'dark');
+        } else {
+          // Weddings Villa Ephrussi has deep foliage top-left -> light text
+          if (siteHeader) siteHeader.setAttribute('data-nav-tone', 'light');
+          if (navGroupLeft) navGroupLeft.setAttribute('data-tone', 'light');
+          if (navGroupRight) navGroupRight.setAttribute('data-tone', 'light');
+        }
 
-  const stackSteps = buildStackSteps(stackPrints.length);
+        if (!activeImg) return;
 
-  function printPose(k, top, lift) {
-    if (k < top) {
-      return `translate3d(${LIFT_SWING}px, ${(-scene.stackExit).toFixed(1)}px, 0) rotate(${LIFT_TILT}deg) scale(1.04)`;
-    }
-    if (k === top) {
-      const swing = easeOutCubic(lift);
-      const away = easeInCubic(lift);
-      return `translate3d(${(LIFT_SWING * swing).toFixed(1)}px, ${(-scene.stackExit * away).toFixed(1)}px, 0) rotate(${(LIFT_TILT * swing).toFixed(2)}deg) scale(${(1 + 0.04 * swing).toFixed(3)})`;
-    }
-    const settle = k === top + 1 ? easeOutCubic(lift) : 0;
-    const keep = 1 - settle;
-    const tilt = PILE_TILT[k % PILE_TILT.length];
-    const [nx, ny] = PILE_NUDGE[k % PILE_NUDGE.length];
-    return `translate3d(${(nx * keep).toFixed(1)}px, ${(ny * keep).toFixed(1)}px, 0) rotate(${(tilt * keep).toFixed(2)}deg) scale(${(PILE_SCALE + (1 - PILE_SCALE) * settle).toFixed(3)})`;
-  }
+        if (!activeImg.complete || activeImg.naturalWidth === 0) {
+          activeImg.addEventListener('load', updateNavbarContrast, { once: true });
+          return;
+        }
 
-  const scene = {
-    zoomTop: 0, zoomRange: 1,
-    galleryTop: 0, galleryRange: 1, galleryTravel: 0, frames: [],
-    stackTop: 0, stackRange: 1, stackExit: 0,
-    stackPoses: [], stackShowing: -1, stackCopy: '',
-    viewportWidth: window.innerWidth,
-  };
+        const cacheKey = activeImg.currentSrc || activeImg.src;
+        let lumData = luminanceCache.get(cacheKey);
 
-  function measureScrollScenes() {
-    const scrollY = window.scrollY;
-    const viewportHeight = window.innerHeight;
-    scene.viewportWidth = window.innerWidth;
+        if (!lumData) {
+          try {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            if (ctx) {
+              const sampleW = 60;
+              const sampleH = 16;
+              canvas.width = sampleW;
+              canvas.height = sampleH;
 
-    if (zoomSection) {
-      scene.zoomTop = zoomSection.getBoundingClientRect().top + scrollY;
-      scene.zoomRange = Math.max(1, zoomSection.offsetHeight - viewportHeight);
-    }
+              // Sample the top 15% strip of the image (where the fixed navbar sits)
+              ctx.drawImage(
+                activeImg,
+                0, 0, activeImg.naturalWidth, Math.max(1, Math.floor(activeImg.naturalHeight * 0.15)),
+                0, 0, sampleW, sampleH
+              );
 
-    if (horizontalSection && horizontalTrack) {
-      scene.galleryTop = horizontalSection.getBoundingClientRect().top + scrollY;
-      scene.galleryRange = Math.max(1, horizontalSection.offsetHeight - viewportHeight);
-      scene.galleryTravel = Math.max(0, horizontalTrack.scrollWidth - scene.viewportWidth);
-    }
+              const imgData = ctx.getImageData(0, 0, sampleW, sampleH).data;
+              let leftLumSum = 0;
+              let leftCount = 0;
+              let rightLumSum = 0;
+              let rightCount = 0;
+              let totalLumSum = 0;
+              let totalCount = 0;
 
-    scene.frames = galleryFrames.map((box) => ({
-      box,
-      center: box.offsetLeft + box.offsetWidth / 2,
-      width: box.offsetWidth,
-      develop: '',
-    }));
+              for (let y = 0; y < sampleH; y++) {
+                for (let x = 0; x < sampleW; x++) {
+                  const idx = (y * sampleW + x) * 4;
+                  const r = imgData[idx];
+                  const g = imgData[idx + 1];
+                  const b = imgData[idx + 2];
+                  // ITU-R BT.709 relative perceptual luminance
+                  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
-    if (stackSection && stackPile) {
-      scene.stackTop = stackSection.getBoundingClientRect().top + scrollY;
-      scene.stackRange = Math.max(1, stackSection.offsetHeight - viewportHeight);
-      scene.stackExit = viewportHeight + stackPile.offsetHeight / 2 + 40;
-      scene.stackPoses = [];
-    }
-  }
+                  totalLumSum += lum;
+                  totalCount++;
 
-  function renderScrollScenes() {
-    scrollFrame = 0;
-    const scrollY = window.scrollY;
+                  // Left group covers ~first 35% of navbar width
+                  if (x < sampleW * 0.35) {
+                    leftLumSum += lum;
+                    leftCount++;
+                  }
+                  // Right group covers ~last 45% of navbar width (Portfolio, About, Contact)
+                  else if (x > sampleW * 0.55) {
+                    rightLumSum += lum;
+                    rightCount++;
+                  }
+                }
+              }
 
-    // 1. Frame Zoom
-    if (zoomBox) {
-      const progress = clamp01((scrollY - scene.zoomTop) / scene.zoomRange);
-      zoomBox.style.transform = `scale(${0.45 + progress * 0.55})`;
-    }
+              const avgLum = totalLumSum / (totalCount || 1);
+              const leftAvg = leftCount > 0 ? leftLumSum / leftCount : avgLum;
+              const rightAvg = rightCount > 0 ? rightLumSum / rightCount : avgLum;
 
-    // 2. Horizontal Gallery
-    if (horizontalTrack) {
-      const progress = clamp01((scrollY - scene.galleryTop) / scene.galleryRange);
-      const shift = progress * scene.galleryTravel;
-      horizontalTrack.style.transform = `translate3d(${(-shift).toFixed(2)}px, 0, 0)`;
+              lumData = {
+                overall: avgLum < 140 ? 'light' : 'dark',
+                left: leftAvg < 140 ? 'light' : 'dark',
+                right: rightAvg < 140 ? 'light' : 'dark',
+              };
 
-      const half = scene.viewportWidth / 2;
-      const still = motionStill.matches;
-      for (const frame of scene.frames) {
-        const fromCentre = Math.abs(frame.center - shift - half);
-        const t = 1 - clamp01((fromCentre - frame.width * DEVELOP_HOLD) / (frame.width * DEVELOP_FADE));
-        const develop = (still ? 1 : smoothstep(t)).toFixed(3);
-        if (develop !== frame.develop) {
-          frame.develop = develop;
-          frame.box.style.setProperty('--develop', develop);
+              luminanceCache.set(cacheKey, lumData);
+            }
+          } catch (e) {
+            // Fallback gracefully to default
+          }
+        }
+
+        if (lumData) {
+          if (siteHeader) siteHeader.setAttribute('data-nav-tone', lumData.overall);
+          if (navGroupLeft) navGroupLeft.setAttribute('data-tone', lumData.left);
+          if (navGroupRight) navGroupRight.setAttribute('data-tone', lumData.right);
         }
       }
-    }
 
-    // 3. Print Stack
-    if (stackCard && stackSteps.length && stackPrints.length) {
-      const progress = clamp01((scrollY - scene.stackTop) / scene.stackRange);
-      const step = stackSteps.find((s) => progress <= s.end) || stackSteps[stackSteps.length - 1];
-      const still = motionStill.matches;
-      let lift = step.kind === 'lift' ? clamp01((progress - step.start) / (step.end - step.start)) : 0;
-      if (still) lift = lift < 0.5 ? 0 : 1;
+      // 2b. BUTTERY SLAT CURTAIN TRANSITION
+      // The outgoing frame drifts back while the incoming one is sliced into
+      // vertical slats that glide in — alternating up/down, staggered toward
+      // whichever tab you pressed — under a soft scale + blur bloom. Because
+      // every slat carries the full-bleed frame offset into its own column,
+      // the photograph re-assembles itself with no visible seams.
+      const heroStack = document.querySelector('.hero-photo-stack');
+      const heroPhotos = { commercial: photoCommercial, weddings: photoWeddings };
 
-      stackPrints.forEach((print, k) => {
-        const pose = printPose(k, step.print, lift);
-        if (pose !== scene.stackPoses[k]) {
-          scene.stackPoses[k] = pose;
-          print.style.transform = pose;
-          print.style.visibility = k < step.print ? 'hidden' : '';
+      const SLAT_DURATION = 980;   // travel time of a single slat
+      const SLAT_STAGGER = 58;     // offset between neighbouring slats
+      const SLAT_EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const supportsWAAPI = typeof Element !== 'undefined' && !!Element.prototype.animate;
+
+      // Hand the stylesheet control of the photographs only once the script is
+      // actually running. Until this lands, the plain data-mode dissolve holds,
+      // so the hero is never blank if this file and style.css get out of step.
+      if (heroStack) heroStack.classList.add('curtain-ready');
+
+      let slatLayer = null;          // the live curtain, if one is running
+      let slatAnimations = [];       // every animation belonging to that curtain
+      let slatSettle = null;         // callback that lands the transition early
+      let slatRelayout = null;       // re-measures the curtain on resize
+
+      function slatCount() {
+        const w = window.innerWidth;
+        if (w < 640) return 4;
+        if (w < 1100) return 5;
+        return 6;
+      }
+
+      // Land whatever curtain is mid-flight instantly (fast repeated clicks,
+      // or a mode change arriving before the previous one finished).
+      function settleCurtain() {
+        if (slatSettle) slatSettle();
+      }
+
+      function swapBasePhoto(mode) {
+        Object.keys(heroPhotos).forEach(key => {
+          const img = heroPhotos[key];
+          if (!img) return;
+          img.classList.toggle('is-active', key === mode);
+          img.style.transform = '';
+          img.style.filter = '';
+        });
+      }
+
+      function runSlatCurtain(fromMode, toMode) {
+        const incoming = heroPhotos[toMode];
+        const outgoing = heroPhotos[fromMode];
+        if (!heroStack || !incoming) {
+          swapBasePhoto(toMode);
+          return;
+        }
+
+        const source = incoming.currentSrc || incoming.src;
+        const count = slatCount();
+        // Reveal sweeps toward the tab that was pressed: Commercial sits on the
+        // left of the navbar, Weddings on the right.
+        const sweepRight = toMode === 'weddings';
+        const total = SLAT_DURATION + SLAT_STAGGER * (count - 1);
+
+        const layer = document.createElement('div');
+        layer.className = 'hero-slats';
+        layer.setAttribute('aria-hidden', 'true');
+
+        const slats = [];
+        for (let i = 0; i < count; i++) {
+          const slat = document.createElement('div');
+          slat.className = 'hero-slat';
+          const inner = document.createElement('div');
+          inner.className = 'hero-slat-inner';
+          inner.style.backgroundImage = `url("${source}")`;
+          slat.appendChild(inner);
+          layer.appendChild(slat);
+          slats.push({ slat, inner });
+        }
+
+        // Integer edges tile the viewport exactly — no hairline gaps, no overlap.
+        function layoutSlats() {
+          const width = heroStack.clientWidth || window.innerWidth;
+          for (let i = 0; i < count; i++) {
+            const left = Math.round((i * width) / count);
+            const right = Math.round(((i + 1) * width) / count);
+            const { slat, inner } = slats[i];
+            slat.style.left = left + 'px';
+            slat.style.width = (right - left) + 'px';
+            inner.style.left = -left + 'px';
+            inner.style.width = width + 'px';
+          }
+        }
+
+        layoutSlats();
+        heroStack.appendChild(layer);
+
+        slatLayer = layer;
+        slatRelayout = layoutSlats;
+        slatAnimations = [];
+
+        // Everything below animates transform and opacity ONLY. Both are handled
+        // on the compositor, so cost does not grow with screen size — which
+        // matters here, where each slat carries a full-viewport image.
+        slats.forEach(({ slat, inner }, i) => {
+          const order = sweepRight ? i : count - 1 - i;
+          const delay = order * SLAT_STAGGER;
+          const fromY = i % 2 === 0 ? '-102%' : '102%';
+
+          // Travel plus a slight settle out of scale, in one transform.
+          slatAnimations.push(inner.animate([
+            { transform: `translate3d(0, ${fromY}, 0) scale(1.06)` },
+            { transform: 'translate3d(0, 0, 0) scale(1)' }
+          ], { duration: SLAT_DURATION, delay, easing: SLAT_EASE, fill: 'both' }));
+
+          // Each slat materialises as it travels, which softens the leading
+          // edge the way the old blur did but for free.
+          slatAnimations.push(slat.animate([
+            { opacity: 0 },
+            { opacity: 1 }
+          ], { duration: SLAT_DURATION * 0.45, delay, easing: 'cubic-bezier(0.33, 0.9, 0.4, 1)', fill: 'both' }));
+        });
+
+        // The frame being replaced drifts gently back as it leaves.
+        if (outgoing) {
+          slatAnimations.push(outgoing.animate([
+            { transform: 'scale(1)' },
+            { transform: 'scale(1.06)' }
+          ], { duration: total, easing: SLAT_EASE, fill: 'both' }));
+        }
+
+        let landed = false;
+        const land = () => {
+          if (landed) return;
+          landed = true;
+          clearTimeout(timer);
+          slatAnimations.forEach(anim => anim.cancel());
+          slatAnimations = [];
+          // At rest the curtain is pixel-identical to the incoming photograph,
+          // so handing over to the base layer is invisible.
+          swapBasePhoto(toMode);
+          if (layer.parentNode) layer.parentNode.removeChild(layer);
+          if (slatLayer === layer) {
+            slatLayer = null;
+            slatSettle = null;
+            slatRelayout = null;
+          }
+        };
+
+        slatSettle = land;
+        // Timer rather than the animation's finished promise: it still fires if
+        // the tab is backgrounded mid-transition, so we never strand the curtain.
+        const timer = setTimeout(land, total + 40);
+      }
+
+      function setMode(mode) {
+        if (body.getAttribute('data-mode') === mode) return;
+
+        const previous = body.getAttribute('data-mode') || 'commercial';
+
+        body.setAttribute('data-mode', mode);
+
+        toggleButtons.forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.target === mode);
+        });
+
+        settleCurtain();
+
+        // Skip the choreography when it cannot be seen or is not wanted.
+        const heroOffscreen = window.scrollY > window.innerHeight * 0.9;
+        if (!supportsWAAPI || reducedMotion.matches || heroOffscreen) {
+          swapBasePhoto(mode);
+        } else {
+          runSlatCurtain(previous, mode);
+        }
+
+        updateNavbarContrast();
+        updateScrollbar();
+        // Scroll scenes show mode-dependent photos (and their loading
+        // skeletons), so redraw them for the new mode.
+        onScroll();
+      }
+
+
+  // (the mode tabs are handled by the delegated click listener above)
+
+      // 3. SMOOTH NAVIGATION (Portfolio scrolls to top when already on home page)
+      const navPortfolio = document.getElementById('nav-portfolio');
+      if (navPortfolio) {
+        navPortfolio.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, { signal });
+      }
+
+      // 4. SCROLL BINDINGS (Frame Zoom, Horizontal Gallery & Darkroom Develop)
+      // All layout measurement lives in measureScrollScenes(), which runs only
+      // on load and resize. The per-frame render is plain arithmetic on those
+      // cached numbers plus style writes, and runs at most once per animation
+      // frame — so scrolling never forces a layout recalculation.
+      const zoomSection = document.querySelector('.frame-zoom-section');
+      const zoomBox = document.querySelector('.zoom-frame-box');
+      const horizontalSection = document.querySelector('.horizontal-scroll-section');
+      const horizontalTrack = document.querySelector('.horizontal-track');
+      const scrollHeader = document.getElementById('site-header');
+      const motionStill = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      // SKELETON LOADING: every photo sits on a shimmering grey skeleton
+      // (style.css) until it has loaded. Tag each one as it arrives so the CSS
+      // can retire its skeleton, and redraw so the print stack section can
+      // drop its loading state. Photos already in the cache are tagged at once.
+      document.querySelectorAll('.hero-photo, .image-box-media img, .stack-print img, .strip-tile img').forEach(img => {
+        if (img.complete && img.naturalWidth > 0) {
+          img.classList.add('is-loaded');
+        } else {
+          img.addEventListener('load', () => {
+            img.classList.add('is-loaded');
+            onScroll();
+          }, { once: true });
         }
       });
 
-      const showing = Math.min(
-        stackPrints.length - 1,
-        Math.max(0, step.kind === 'lift' && lift >= 0.5 ? step.print + 1 : step.print)
-      );
+      // DARKROOM DEVELOP (the scrolling row): the photo at the centre of the
+      // screen is in focus. Each frame's --develop (0 = blank paper, 1 = full
+      // photograph) follows its distance from the centre, in units of the
+      // frame's own width: full colour within DEVELOP_HOLD of the centre,
+      // fading back to paper over DEVELOP_FADE. style.css turns --develop into
+      // the paper overlay's and the caption's opacity.
+      const galleryFrames = Array.from(document.querySelectorAll('.image-box'));
+      const DEVELOP_HOLD = 0.25;
+      const DEVELOP_FADE = 0.9;
 
-      let copy = 1;
-      if (step.kind === 'lift' && !still) {
-        copy = lift < 0.5 ? 1 - smoothstep(clamp01(lift / 0.45)) : smoothstep(clamp01((lift - 0.55) / 0.45));
+      // 5. PRINT STACK SECTION
+      // The section pins while you scroll through a stack of photo prints. Its
+      // scroll is a timeline: each print holds on top of the pile, then gets
+      // lifted up and away (swinging aside and tilting as it goes) while the
+      // next print straightens and settles up from underneath. The text fades
+      // out with the old print and back in with the new one. The last print
+      // stays. Step lengths are relative shares of the scroll.
+      const stackSection = document.querySelector('.stack-section');
+      const stackCard = document.querySelector('.stack-card');
+      const stackPile = document.querySelector('.stack-prints');
+      const stackPrints = Array.from(document.querySelectorAll('.stack-print'));
+      const stackTexts = Array.from(document.querySelectorAll('.stack-text'));
+      const stackCounter = document.querySelector('.stack-counter-current');
+
+      const STACK_HOLD = 1;
+      const STACK_LIFT = 1;
+
+      // How each print lies in the pile before its turn: a small tilt and
+      // nudge, so the edges of the prints underneath peek out.
+      const PILE_TILT = [-3, 2.5, -1.5, 3, -2, 1.5]; // degrees
+      const PILE_NUDGE = [[-6, 8], [7, 5], [-4, 10], [6, 7], [-7, 6], [4, 9]]; // px [x, y]
+      const PILE_SCALE = 0.96;
+      // How the top print leaves: swings this far aside and tilts this much.
+      const LIFT_SWING = 40; // px
+      const LIFT_TILT = -8; // degrees
+
+      const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+      const easeInCubic = t => t * t * t;
+      const smoothstep = t => t * t * (3 - 2 * t);
+
+      function buildStackSteps(count) {
+        const steps = [];
+        for (let i = 0; i < count; i++) {
+          steps.push({ print: i, kind: 'hold', share: STACK_HOLD });
+          if (i < count - 1) steps.push({ print: i, kind: 'lift', share: STACK_LIFT });
+        }
+        const total = steps.reduce((sum, step) => sum + step.share, 0);
+        let at = 0;
+        for (const step of steps) {
+          step.start = at / total;
+          at += step.share;
+          step.end = at / total;
+        }
+        return steps;
       }
 
-      if (showing !== scene.stackShowing) {
-        scene.stackShowing = showing;
-        stackTexts.forEach((el, i) => el.classList.toggle('is-current', i === showing));
-        stackPrints.forEach((el, i) => el.classList.toggle('is-top', i === showing));
-        if (stackCounter) stackCounter.textContent = String(showing + 1).padStart(2, '0');
+      const stackSteps = buildStackSteps(stackPrints.length);
+
+      // The pose (a CSS transform) for print k when print `top` is on top of
+      // the pile and `lift` (0..1) of the way through being lifted off it.
+      // Poses meet exactly at every step boundary, so nothing ever jumps.
+      function printPose(k, top, lift) {
+        if (k < top) {
+          // Already lifted away: parked where the lift left it, off-screen.
+          return `translate3d(${LIFT_SWING}px, ${(-scene.stackExit).toFixed(1)}px, 0) rotate(${LIFT_TILT}deg) scale(1.04)`;
+        }
+        if (k === top) {
+          // Picked up: it swings aside and tilts early, then accelerates away
+          // upward, the way you'd flick a print off the pile.
+          const swing = easeOutCubic(lift);
+          const away = easeInCubic(lift);
+          return `translate3d(${(LIFT_SWING * swing).toFixed(1)}px, ${(-scene.stackExit * away).toFixed(1)}px, 0) rotate(${(LIFT_TILT * swing).toFixed(2)}deg) scale(${(1 + 0.04 * swing).toFixed(3)})`;
+        }
+        // Still in the pile. The print directly underneath straightens and
+        // settles up into the top spot as the one above it is lifted.
+        const settle = k === top + 1 ? easeOutCubic(lift) : 0;
+        const keep = 1 - settle;
+        const tilt = PILE_TILT[k % PILE_TILT.length];
+        const [nx, ny] = PILE_NUDGE[k % PILE_NUDGE.length];
+        return `translate3d(${(nx * keep).toFixed(1)}px, ${(ny * keep).toFixed(1)}px, 0) rotate(${(tilt * keep).toFixed(2)}deg) scale(${(PILE_SCALE + (1 - PILE_SCALE) * settle).toFixed(3)})`;
       }
 
-      const copyKey = copy.toFixed(3);
-      if (copyKey !== scene.stackCopy) {
-        scene.stackCopy = copyKey;
-        stackCard.style.setProperty('--copy', copyKey);
+      // 6. FILM STRIPS SECTION: the section pins while three rows of landscape
+      // photos slide sideways on their own, forever — the scroll does not
+      // drive them. style.css runs each row's animation (its own duration, and
+      // the middle row reversed); all this code does is pause the rows while
+      // the section is off screen, so they cost nothing the rest of the time.
+      const stripsSection = document.querySelector('.strips-section');
+      const stripRows = Array.from(document.querySelectorAll('.strip-row'));
+
+      const scene = {
+        zoomTop: 0, zoomRange: 1,
+        galleryTop: 0, galleryRange: 1, galleryTravel: 0, frames: [],
+        stackTop: 0, stackRange: 1, stackExit: 0,
+        stackPoses: [], stackShowing: -1, stackCopy: '',
+        stripsTop: 0, stripsRange: 1, stripsRunning: null,
+        viewportWidth: window.innerWidth
+      };
+
+      const clamp01 = value => (value < 0 ? 0 : value > 1 ? 1 : value);
+
+      function measureScrollScenes() {
+        const scrollY = window.scrollY;
+        const viewportHeight = window.innerHeight;
+        scene.viewportWidth = window.innerWidth;
+
+        if (zoomSection) {
+          scene.zoomTop = zoomSection.getBoundingClientRect().top + scrollY;
+          scene.zoomRange = Math.max(1, zoomSection.offsetHeight - viewportHeight);
+        }
+
+        if (horizontalSection && horizontalTrack) {
+          scene.galleryTop = horizontalSection.getBoundingClientRect().top + scrollY;
+          scene.galleryRange = Math.max(1, horizontalSection.offsetHeight - viewportHeight);
+          // The track starts with its first photo centred and ends running out
+          // to the right edge (its padding, in style.css), so travelling
+          // scrollWidth - viewport covers exactly that.
+          scene.galleryTravel = Math.max(0, horizontalTrack.scrollWidth - scene.viewportWidth);
+        }
+
+        // offsetLeft ignores transforms, so these are each frame's resting
+        // positions no matter where the track currently sits.
+        scene.frames = galleryFrames.map(box => ({
+          box, center: box.offsetLeft + box.offsetWidth / 2, width: box.offsetWidth, develop: ''
+        }));
+
+        if (stackSection && stackPile) {
+          scene.stackTop = stackSection.getBoundingClientRect().top + scrollY;
+          scene.stackRange = Math.max(1, stackSection.offsetHeight - viewportHeight);
+          // A lifted print travels a full screen plus half its own height (and
+          // a margin for its tilted corners), which clears the top of the
+          // screen wherever the pile sits.
+          scene.stackExit = viewportHeight + stackPile.offsetHeight / 2 + 40;
+          scene.stackPoses = []; // re-pose every print at the new size
+        }
+
+        if (stripsSection) {
+          scene.stripsTop = stripsSection.getBoundingClientRect().top + scrollY;
+          scene.stripsRange = Math.max(1, stripsSection.offsetHeight - viewportHeight);
+        }
       }
 
-      const mode = body.getAttribute('data-mode') === 'weddings' ? 'weddings' : 'commercial';
-      const photo = stackPrints[showing]?.querySelector(`.mode-photo-${mode}`);
-      stackCard.classList.toggle('is-loading', !!photo && !photo.classList.contains('is-loaded'));
-    }
+      // ZOOM SECTION VIDEOS (Matiaz's parallax): the cat plays behind the
+      // whole section, drifting slowly around the frame. The puppy fills the
+      // frame itself (cropped, never stretched) but holds on a still frame
+      // under a title while the frame zooms; over the last stretch of the zoom
+      // the title eases out, and once the frame is fully zoomed in the puppy
+      // starts playing. Scrolling back pauses it and brings the title back.
+      // The frame zooms over the first ZOOM_PORTION of the section's scroll
+      // and holds at full size for the rest, so the playing video stays on
+      // screen for a while. Both videos (8 MB and 14.7 MB) only start
+      // downloading once the visitor has started scrolling, never at page
+      // load, and only play while the section is on screen. Until each one
+      // is ready, a loading skeleton shows instead. Reduced-motion visitors
+      // see both as still frames, without drift.
+      const ZOOM_PORTION = 0.7;
+      const zoomBackdrop = zoomSection ? zoomSection.querySelector('.zoom-backdrop-video') : null;
+      const zoomVideo = zoomBox ? zoomBox.querySelector('.zoom-video') : null;
+      const zoomVideos = [zoomBackdrop, zoomVideo].filter(Boolean);
+      const zoomVideoPlaying = new Map();
 
-    if (siteHeader) {
-      siteHeader.classList.toggle('scrolled', scrollY > 20);
-    }
-  }
+      zoomVideos.forEach(video => {
+        // The puppy's readiness goes on the frame (it drives the frame's
+        // skeleton and title); the cat's goes on the video itself.
+        const target = video === zoomVideo ? zoomBox : video;
+        const markReady = () => target.classList.add('is-video-ready');
+        video.addEventListener('loadeddata', markReady);
+        if (video.readyState >= 2) markReady();
+      });
 
-  function onScroll() {
-    if (!scrollFrame) scrollFrame = requestAnimationFrame(renderScrollScenes);
-  }
+      function setZoomVideoPlaying(video, play) {
+        if (zoomVideoPlaying.get(video) === play) return;
+        zoomVideoPlaying.set(video, play);
+        if (play) video.play().catch(() => {});
+        else video.pause();
+      }
 
-  function onResize() {
-    measureScrollScenes();
-    renderScrollScenes();
-    updateNavbarContrast();
-  }
+      function updateZoomScene(scrollY, zoomProgress, frameProgress) {
+        const viewportHeight = window.innerHeight;
+        const onScreen = scrollY + viewportHeight > scene.zoomTop
+          && scrollY < scene.zoomTop + scene.zoomRange + viewportHeight;
 
-  triggerScrollRender = onScroll;
+        // Start downloading once the visitor has started scrolling and the
+        // section is within about a screen (so never at page load).
+        if (scrollY > 0 && scrollY + viewportHeight * 2 > scene.zoomTop) {
+          zoomVideos.forEach(video => {
+            if (!video.getAttribute('src')) {
+              video.preload = 'auto';
+              video.src = video.dataset.src;
+            }
+          });
+        }
 
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onResize);
+        const still = motionStill.matches;
+        if (zoomBackdrop) setZoomVideoPlaying(zoomBackdrop, onScreen && !still);
+        if (zoomVideo) setZoomVideoPlaying(zoomVideo, onScreen && frameProgress >= 0.999 && !still);
+        if (!onScreen) return;
 
-  // Photo prefetch on tab hover/touch
-  const prefetchedModes = new Set();
-  function prefetchMode(mode) {
-    if (prefetchedModes.has(mode)) return;
-    prefetchedModes.add(mode);
-    document.querySelectorAll(`.image-box-media .mode-photo-${mode}, .stack-print .mode-photo-${mode}`)
-      .forEach((img) => { img.loading = 'eager'; });
-  }
+        // Parallax: both videos drift up as you scroll. Each is scaled 1.12
+        // (6% spare on each side) and drifts at most 5%, so no edges show.
+        const drift = still ? 0 : 0.5 - zoomProgress;
+        if (zoomBackdrop) zoomBackdrop.style.transform = `translate3d(0, ${(drift * 8).toFixed(2)}%, 0) scale(1.12)`;
+        if (zoomVideo) zoomVideo.style.transform = `translate3d(0, ${(drift * 10).toFixed(2)}%, 0) scale(1.12)`;
 
-  const intentHandlers = [];
-  document.querySelectorAll('.toggle-btn').forEach((btn) => {
-    const intent = () => {
-      if (btn.dataset.target !== body.getAttribute('data-mode')) prefetchMode(btn.dataset.target);
-    };
-    btn.addEventListener('pointerenter', intent);
-    btn.addEventListener('focus', intent);
-    btn.addEventListener('touchstart', intent, { passive: true });
-    intentHandlers.push({ btn, intent });
-  });
+        // The title holds while the frame zooms, then eases out over the last
+        // 45% of the zoom, finishing just as the puppy starts to play.
+        // style.css turns --reveal into the title's and the tint's fade.
+        if (zoomBox) {
+          const reveal = smoothstep(clamp01((frameProgress - 0.55) / 0.45)).toFixed(3);
+          if (reveal !== scene.zoomReveal) {
+            scene.zoomReveal = reveal;
+            zoomBox.style.setProperty('--reveal', reveal);
+          }
+        }
+      }
 
-  measureScrollScenes();
-  renderScrollScenes();
-  updateNavbarContrast();
-  updateScrollbar();
+      function renderScrollScenes() {
+        scrollFrame = 0;
+        const scrollY = window.scrollY;
 
-  cleanupPortfolio = () => {
-    window.removeEventListener('scroll', onScroll);
-    window.removeEventListener('resize', onResize);
-    if (scrollFrame) {
-      cancelAnimationFrame(scrollFrame);
-      scrollFrame = 0;
-    }
-    intentHandlers.forEach(({ btn, intent }) => {
-      btn.removeEventListener('pointerenter', intent);
-      btn.removeEventListener('focus', intent);
-      btn.removeEventListener('touchstart', intent);
-    });
-    triggerScrollRender = null;
-  };
+        // Frame Zoom: scales from 0.45 up to 1.0 over the first ZOOM_PORTION of
+        // the section, then holds at full size while the puppy plays.
+        const zoomProgress = clamp01((scrollY - scene.zoomTop) / scene.zoomRange);
+        const frameProgress = clamp01(zoomProgress / ZOOM_PORTION);
+        if (zoomBox) {
+          zoomBox.style.transform = `scale(${0.45 + frameProgress * 0.55})`;
+        }
+
+        // The two videos and the title in the zoom section
+        updateZoomScene(scrollY, zoomProgress, frameProgress);
+
+        // Horizontal gallery: a sideways slide, with the centre photo in focus
+        if (horizontalTrack) {
+          const progress = clamp01((scrollY - scene.galleryTop) / scene.galleryRange);
+          const shift = progress * scene.galleryTravel;
+          horizontalTrack.style.transform = `translate3d(${(-shift).toFixed(2)}px, 0, 0)`;
+
+          const half = scene.viewportWidth / 2;
+          const still = motionStill.matches;
+          for (const frame of scene.frames) {
+            const fromCentre = Math.abs(frame.center - shift - half);
+            const t = 1 - clamp01((fromCentre - frame.width * DEVELOP_HOLD) / (frame.width * DEVELOP_FADE));
+            const develop = (still ? 1 : smoothstep(t)).toFixed(3);
+            if (develop !== frame.develop) {
+              frame.develop = develop;
+              frame.box.style.setProperty('--develop', develop);
+            }
+          }
+        }
+
+        // Film strips section: the rows slide on their own (style.css). Let
+        // them run only while the section is on screen, so off-screen rows
+        // aren't animating behind the visitor's back.
+        if (stripsSection) {
+          const viewportHeight = window.innerHeight;
+          const onScreen = scrollY + viewportHeight > scene.stripsTop
+            && scrollY < scene.stripsTop + scene.stripsRange + viewportHeight;
+          if (onScreen !== scene.stripsRunning) {
+            scene.stripsRunning = onScreen;
+            stripsSection.classList.toggle('is-running', onScreen);
+          }
+        }
+
+        // Print stack section
+        if (stackCard && stackSteps.length) {
+          const progress = clamp01((scrollY - scene.stackTop) / scene.stackRange);
+          const step = stackSteps.find(s => progress <= s.end) || stackSteps[stackSteps.length - 1];
+          const still = motionStill.matches;
+          let lift = step.kind === 'lift' ? clamp01((progress - step.start) / (step.end - step.start)) : 0;
+          if (still) lift = lift < 0.5 ? 0 : 1; // reduced motion: swap, don't fly
+
+          stackPrints.forEach((print, k) => {
+            const pose = printPose(k, step.print, lift);
+            if (pose !== scene.stackPoses[k]) {
+              scene.stackPoses[k] = pose;
+              print.style.transform = pose;
+              print.style.visibility = k < step.print ? 'hidden' : '';
+            }
+          });
+
+          // The text and counter switch halfway through a lift, while the text
+          // is fully faded: out over the first 45%, back in over the last 45%.
+          const showing = step.kind === 'lift' && lift >= 0.5 ? step.print + 1 : step.print;
+          let copy = 1;
+          if (step.kind === 'lift' && !still) {
+            copy = lift < 0.5 ? 1 - smoothstep(clamp01(lift / 0.45)) : smoothstep(clamp01((lift - 0.55) / 0.45));
+          }
+
+          if (showing !== scene.stackShowing) {
+            scene.stackShowing = showing;
+            stackTexts.forEach((el, i) => el.classList.toggle('is-current', i === showing));
+            stackPrints.forEach((el, i) => el.classList.toggle('is-top', i === showing));
+            if (stackCounter) stackCounter.textContent = String(showing + 1).padStart(2, '0');
+          }
+
+          const copyKey = copy.toFixed(3);
+          if (copyKey !== scene.stackCopy) {
+            scene.stackCopy = copyKey;
+            stackCard.style.setProperty('--copy', copyKey);
+          }
+
+          // Skeleton until the photo on show (this print, this mode) has loaded.
+          const mode = body.getAttribute('data-mode') === 'weddings' ? 'weddings' : 'commercial';
+          const photo = stackPrints[showing].querySelector(`.mode-photo-${mode}`);
+          stackCard.classList.toggle('is-loading', !!photo && !photo.classList.contains('is-loaded'));
+        }
+
+        // Navbar scroll enhancement (elevation shadow)
+        if (scrollHeader) {
+          scrollHeader.classList.toggle('scrolled', scrollY > 20);
+        }
+      }
+
+      let scrollFrame = 0;
+      function onScroll() {
+        if (!scrollFrame) scrollFrame = requestAnimationFrame(renderScrollScenes);
+      }
+
+      window.addEventListener('scroll', onScroll, { passive: true, signal });
+      window.addEventListener('resize', () => {
+        measureScrollScenes();
+        renderScrollScenes();
+        updateNavbarContrast();
+        // Keep a mid-flight curtain tiled to the new viewport width.
+        if (slatRelayout) slatRelayout();
+      }, { signal });
+      window.addEventListener('load', () => {
+        window.scrollTo(0, 0);
+        measureScrollScenes();
+        renderScrollScenes();
+        updateNavbarContrast();
+      }, { signal });
+
+      // PHOTO LOADING: photos load lazily, as they come near the screen, and
+      // show a skeleton until they arrive. Each frame's photo for the other
+      // mode is kept out of view until a mode switch brings it in, so on its
+      // own it would only start loading at the click. Instead, start those
+      // downloads the moment a visitor shows intent to switch (pointing at,
+      // focusing or touching the other tab), just before the click lands.
+      // Visitors who never switch never download the other mode's photos.
+      const prefetchedModes = new Set();
+
+      function prefetchMode(mode) {
+        if (prefetchedModes.has(mode)) return;
+        prefetchedModes.add(mode);
+        document.querySelectorAll(`.image-box-media .mode-photo-${mode}, .stack-print .mode-photo-${mode}, .strip-tile .mode-photo-${mode}`)
+          .forEach(img => { img.loading = 'eager'; });
+      }
+
+      toggleButtons.forEach(btn => {
+        const intent = () => {
+          if (btn.dataset.target !== body.getAttribute('data-mode')) prefetchMode(btn.dataset.target);
+        };
+        btn.addEventListener('pointerenter', intent, { signal });
+        btn.addEventListener('focus', intent, { signal });
+        btn.addEventListener('touchstart', intent, { passive: true, signal });
+      });
+
+      // 6. LIGHTBOX: click (or press Enter on) a photo in the scrolling row or
+      // the print stack to see it large. The arrow keys, the side buttons or a
+      // swipe flip through that section's photos; Esc, the close button or a
+      // click on the dark background closes it. Built here rather than in the
+      // markup because it only works with the script anyway.
+      const lightbox = document.createElement('dialog');
+      lightbox.className = 'lightbox';
+      lightbox.setAttribute('aria-label', 'Photo viewer');
+      lightbox.innerHTML = `
+        <button class="lightbox-button lightbox-close" type="button" aria-label="Close">&times;</button>
+        <button class="lightbox-button lightbox-prev" type="button" aria-label="Previous photo">&lsaquo;</button>
+        <figure class="lightbox-figure">
+          <div class="lightbox-frame"><img class="lightbox-photo" alt="" /></div>
+          <figcaption class="lightbox-caption">
+            <span class="lightbox-count"></span>
+            <span class="lightbox-title"></span>
+            <span class="lightbox-blurb"></span>
+          </figcaption>
+        </figure>
+        <button class="lightbox-button lightbox-next" type="button" aria-label="Next photo">&rsaquo;</button>`;
+      document.body.appendChild(lightbox);
+
+      const lbFigure = lightbox.querySelector('.lightbox-figure');
+      const lbFrame = lightbox.querySelector('.lightbox-frame');
+      const lbPhoto = lightbox.querySelector('.lightbox-photo');
+      const lbCount = lightbox.querySelector('.lightbox-count');
+      const lbTitle = lightbox.querySelector('.lightbox-title');
+      const lbBlurb = lightbox.querySelector('.lightbox-blurb');
+      let lightboxSet = [];
+      let lightboxIndex = 0;
+      let lightboxReturn = null;
+
+      const currentMode = () => (body.getAttribute('data-mode') === 'weddings' ? 'weddings' : 'commercial');
+      const pad2 = n => String(n).padStart(2, '0');
+
+      // Each section flips through its own photos, in the mode on screen.
+      function rowPhotos(mode) {
+        return galleryFrames.map(box => ({
+          src: box.querySelector(`.mode-photo-${mode}`).src,
+          title: box.querySelector(`.mode-text-${mode}`).textContent.trim(),
+          blurb: ''
+        }));
+      }
+
+      function stackPhotos(mode) {
+        return stackPrints.map((print, i) => {
+          const copy = stackTexts[i].querySelector(`.for-${mode}`);
+          return {
+            src: print.querySelector(`.mode-photo-${mode}`).src,
+            title: copy.querySelector('.stack-title').textContent.trim(),
+            blurb: copy.querySelector('.stack-blurb').textContent.trim()
+          };
+        });
+      }
+
+      function showLightboxPhoto(index, direction) {
+        lightboxIndex = (index + lightboxSet.length) % lightboxSet.length;
+        const item = lightboxSet[lightboxIndex];
+        // Skeleton until the photo is ready (usually it already is).
+        lbFrame.classList.add('is-loading');
+        lbPhoto.onload = () => lbFrame.classList.remove('is-loading');
+        lbPhoto.src = item.src;
+        lbPhoto.alt = item.title;
+        if (lbPhoto.complete && lbPhoto.naturalWidth > 0) lbFrame.classList.remove('is-loading');
+        lbCount.textContent = `${pad2(lightboxIndex + 1)} / ${pad2(lightboxSet.length)}`;
+        lbTitle.textContent = item.title;
+        lbBlurb.textContent = item.blurb;
+        lbBlurb.hidden = !item.blurb;
+        // The new photo slides in from the side you're flipping towards.
+        if (direction && !motionStill.matches) {
+          lbFigure.animate([
+            { transform: `translateX(${direction * 32}px)`, opacity: 0.35 },
+            { transform: 'none', opacity: 1 }
+          ], { duration: 360, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+        }
+      }
+
+      function openLightbox(set, index, returnTo) {
+        lightboxSet = set;
+        lightboxReturn = returnTo;
+        document.documentElement.classList.add('lightbox-open');
+        lightbox.showModal();
+        showLightboxPhoto(index, 0);
+      }
+
+      lightbox.addEventListener('close', () => {
+        document.documentElement.classList.remove('lightbox-open');
+        if (lightboxReturn) lightboxReturn.focus({ preventScroll: true });
+      });
+      lightbox.querySelector('.lightbox-close').addEventListener('click', () => lightbox.close());
+      lightbox.querySelector('.lightbox-prev').addEventListener('click', () => showLightboxPhoto(lightboxIndex - 1, -1));
+      lightbox.querySelector('.lightbox-next').addEventListener('click', () => showLightboxPhoto(lightboxIndex + 1, 1));
+      lightbox.addEventListener('click', e => {
+        if (e.target === lightbox) lightbox.close();
+      });
+      lightbox.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); showLightboxPhoto(lightboxIndex + 1, 1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); showLightboxPhoto(lightboxIndex - 1, -1); }
+      });
+
+      // Swipe on touch screens (or drag with a mouse) to flip.
+      let swipeStartX = null;
+      lbFrame.addEventListener('pointerdown', e => { swipeStartX = e.clientX; });
+      lbFrame.addEventListener('pointerup', e => {
+        if (swipeStartX === null) return;
+        const dx = e.clientX - swipeStartX;
+        swipeStartX = null;
+        if (Math.abs(dx) > 50) showLightboxPhoto(lightboxIndex + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
+      });
+
+      // Make the photos openable, by mouse and by keyboard.
+      function makeEnlargeable(el, label, open) {
+        el.classList.add('can-enlarge');
+        el.tabIndex = 0;
+        el.setAttribute('role', 'button');
+        el.setAttribute('aria-label', label);
+        el.addEventListener('click', open);
+        el.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); }
+        });
+      }
+
+      galleryFrames.forEach((box, i) => {
+        makeEnlargeable(box, `Enlarge photo ${i + 1} of ${galleryFrames.length}`,
+          () => openLightbox(rowPhotos(currentMode()), i, box));
+      });
+
+      if (stackPile) {
+        // The pile was hidden from screen readers as pure decoration; it's a
+        // control now, so expose it.
+        stackPile.removeAttribute('aria-hidden');
+        makeEnlargeable(stackPile, 'Enlarge the photo on top of the stack',
+          () => openLightbox(stackPhotos(currentMode()), Math.max(0, scene.stackShowing), stackPile));
+      }
+
+      // Film strip tiles flip through the photos in their own row. Each row
+      // holds its photos twice over (the second set is the loop's copy), so
+      // the viewer lists the row once and a copy opens at the same photo.
+      stripRows.forEach((row, r) => {
+        const tiles = Array.from(row.querySelectorAll('.strip-tile'));
+        const originals = tiles.filter(tile => !tile.dataset.copy);
+        const count = originals.length || tiles.length;
+        const rowPhotos = mode => originals.map(tile => {
+          const img = tile.querySelector(`.mode-photo-${mode}`);
+          return { src: img.src, title: img.alt, blurb: '' };
+        });
+        tiles.forEach((tile, i) => {
+          const at = i % count;
+          makeEnlargeable(tile, `Enlarge photo ${at + 1} of ${count}, row ${r + 1}`,
+            () => openLightbox(rowPhotos(currentMode()), at, tile));
+        });
+      });
+      measureScrollScenes();
+      renderScrollScenes();
+      updateNavbarContrast();
+
+      pageSetMode = setMode;
+      updateScrollbar();
+
+      teardown = () => {
+        pageLife.abort();
+        if (scrollFrame) cancelAnimationFrame(scrollFrame);
+        settleCurtain();
+        if (lightbox.open) lightbox.close();
+        lightbox.remove();
+      };
 }
-
-// Attach to window for backwards compatibility with any inline callers
-window.initPortfolioPage = initPortfolioPage;
-window.destroyPortfolioPage = destroyPortfolioPage;
-window.setMode = setMode;
