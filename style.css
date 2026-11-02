@@ -461,6 +461,22 @@ body[data-mode="commercial"] .mode-text-weddings {
   transition: background-color 0.6s ease;
 }
 
+/* Subtle cinematic vignette scrim to guarantee hero typography contrast */
+.hero-image-space::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(15, 15, 15, 0.28) 0%,
+    rgba(15, 15, 15, 0.45) 55%,
+    rgba(15, 15, 15, 0.65) 100%
+  );
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
 /* High-resolution photography backdrop cross-fade stack */
 .hero-photo-stack {
   position: absolute;
@@ -582,7 +598,8 @@ body[data-mode="weddings"] .hero-photo-stack:not(.curtain-ready) > .photo-weddin
   line-height: 1;
   text-transform: uppercase;
   white-space: nowrap;
-  color: var(--text-main);
+  color: #ffffff;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.35);
   will-change: clip-path, opacity;
   transition: clip-path 0.7s cubic-bezier(0.25, 1, 0.5, 1),
               opacity 0.6s ease,
@@ -664,12 +681,12 @@ body[data-mode="weddings"] .hero-title-weddings {
   -webkit-backdrop-filter: none;
   border: none;
   box-shadow: none;
-  text-shadow: none;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
   padding: 0;
   border-radius: 0;
   line-height: 1.4;
   white-space: nowrap;
-  color: var(--text-main);
+  color: rgba(255, 255, 255, 0.92);
   will-change: clip-path, opacity;
   transition: clip-path 0.7s cubic-bezier(0.25, 1, 0.5, 1),
               opacity 0.6s ease,
