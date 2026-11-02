@@ -63,18 +63,11 @@ export function initPortfolioPage() {
         const mode = body.getAttribute('data-mode') || 'commercial';
         const activeImg = mode === 'weddings' ? photoWeddings : photoCommercial;
 
-        // Sensible instant defaults while image loads
-        if (mode === 'commercial') {
-          // Commercial studio image is high-key light -> dark text
-          if (siteHeader) siteHeader.setAttribute('data-nav-tone', 'dark');
-          if (navGroupLeft) navGroupLeft.setAttribute('data-tone', 'dark');
-          if (navGroupRight) navGroupRight.setAttribute('data-tone', 'dark');
-        } else {
-          // Weddings Villa Ephrussi has deep foliage top-left -> light text
-          if (siteHeader) siteHeader.setAttribute('data-nav-tone', 'light');
-          if (navGroupLeft) navGroupLeft.setAttribute('data-tone', 'light');
-          if (navGroupRight) navGroupRight.setAttribute('data-tone', 'light');
-        }
+        // Instant defaults matching current hero photography (both Apres-Ski and Mountain have dark tops)
+        const defaultTone = 'light';
+        if (siteHeader) siteHeader.setAttribute('data-nav-tone', defaultTone);
+        if (navGroupLeft) navGroupLeft.setAttribute('data-tone', defaultTone);
+        if (navGroupRight) navGroupRight.setAttribute('data-tone', defaultTone);
 
         if (!activeImg) return;
 

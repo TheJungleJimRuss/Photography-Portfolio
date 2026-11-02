@@ -227,7 +227,7 @@ body[data-mode="commercial"] .mode-text-weddings {
   border-bottom: 1px solid transparent;
   box-shadow: none;
   pointer-events: none;
-  transition: background-color 0.35s ease, backdrop-filter 0.35s ease, -webkit-backdrop-filter 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  transition: background-color 0.2s ease, backdrop-filter 0.2s ease, -webkit-backdrop-filter 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .site-header.scrolled {
@@ -273,7 +273,7 @@ body[data-mode="commercial"] .mode-text-weddings {
   cursor: pointer;
   white-space: nowrap;
   line-height: 1;
-  transition: color 0.35s ease, opacity 0.25s ease;
+  transition: color 0.18s ease, opacity 0.18s ease;
   user-select: none;
 }
 

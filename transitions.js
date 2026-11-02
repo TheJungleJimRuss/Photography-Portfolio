@@ -422,6 +422,12 @@ class PageWheelRouter {
       html.classList.remove('subpage-active');
       if (header) {
         header.classList.remove('solid');
+        // Instantly apply hero contrast tone so navbar doesn't lag
+        const mode = body.getAttribute('data-mode') || 'commercial';
+        const tone = 'light'; // Both Apres Ski and Mountain hero photos have deep top skies requiring light tone
+        header.setAttribute('data-nav-tone', tone);
+        const groups = header.querySelectorAll('.nav-group');
+        groups.forEach(g => g.setAttribute('data-tone', tone));
       }
       if (!body.getAttribute('data-mode')) {
         body.setAttribute('data-mode', 'commercial');
