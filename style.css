@@ -333,60 +333,60 @@ body[data-mode="commercial"] .mode-text-weddings {
    When scrolled, the navbar background takes over and returns to standard theme.
    ========================================================================== */
 
-/* Over DARK background -> Crisp LIGHT/WHITE text */
-.site-header:not(.scrolled) .nav-group[data-tone="light"] .nav-item,
-.site-header:not(.scrolled)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item {
+/* Over DARK background -> Crisp LIGHT/WHITE text (hero only, never on solid/subpage nav) */
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="light"] .nav-item,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item {
   color: #ffffff;
   opacity: 0.9;
 }
 
-.site-header:not(.scrolled) .nav-group[data-tone="light"] .nav-item:hover,
-.site-header:not(.scrolled)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item:hover {
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="light"] .nav-item:hover,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item:hover {
   opacity: 1;
 }
 
-.site-header:not(.scrolled) .nav-group[data-tone="light"] .nav-item.toggle-btn.active,
-.site-header:not(.scrolled)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item.toggle-btn.active {
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="light"] .nav-item.toggle-btn.active,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item.toggle-btn.active {
   color: #ffffff;
   opacity: 1;
 }
 
-.site-header:not(.scrolled) .nav-group[data-tone="light"] .nav-item.toggle-btn::after,
-.site-header:not(.scrolled)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item.toggle-btn::after {
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="light"] .nav-item.toggle-btn::after,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item.toggle-btn::after {
   background-color: #ffffff;
 }
 
-.site-header:not(.scrolled) .nav-group[data-tone="light"] .nav-sep,
-.site-header:not(.scrolled)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-sep {
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="light"] .nav-sep,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-sep {
   color: #ffffff;
   opacity: 0.65;
 }
 
 /* Over LIGHT background -> Crisp DARK text */
-.site-header:not(.scrolled) .nav-group[data-tone="dark"] .nav-item,
-.site-header:not(.scrolled)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item {
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="dark"] .nav-item,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item {
   color: #141414;
   opacity: 0.85;
 }
 
-.site-header:not(.scrolled) .nav-group[data-tone="dark"] .nav-item:hover,
-.site-header:not(.scrolled)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item:hover {
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="dark"] .nav-item:hover,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item:hover {
   opacity: 1;
 }
 
-.site-header:not(.scrolled) .nav-group[data-tone="dark"] .nav-item.toggle-btn.active,
-.site-header:not(.scrolled)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item.toggle-btn.active {
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="dark"] .nav-item.toggle-btn.active,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item.toggle-btn.active {
   color: #141414;
   opacity: 1;
 }
 
-.site-header:not(.scrolled) .nav-group[data-tone="dark"] .nav-item.toggle-btn::after,
-.site-header:not(.scrolled)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item.toggle-btn::after {
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="dark"] .nav-item.toggle-btn::after,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item.toggle-btn::after {
   background-color: #141414;
 }
 
-.site-header:not(.scrolled) .nav-group[data-tone="dark"] .nav-sep,
-.site-header:not(.scrolled)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-sep {
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="dark"] .nav-sep,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-sep {
   color: #141414;
   opacity: 0.45;
 }
@@ -672,21 +672,21 @@ body[data-mode="weddings"] .hero-title-weddings {
 .hero-subtitle-layer {
   grid-area: stack;
   font-family: var(--font-commercial);
-  font-size: clamp(0.78rem, 1.2vw, 0.95rem);
-  font-weight: 500;
-  letter-spacing: 0.16em;
+  font-size: clamp(0.85rem, 1.35vw, 1.05rem);
+  font-weight: 600;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border: none;
-  box-shadow: none;
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
-  padding: 0;
-  border-radius: 0;
+  background: rgba(10, 10, 10, 0.42);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  padding: 0.45rem 1.4rem;
+  border-radius: 9999px;
   line-height: 1.4;
   white-space: nowrap;
-  color: rgba(255, 255, 255, 0.92);
+  color: #ffffff;
   will-change: clip-path, opacity;
   transition: clip-path 0.7s cubic-bezier(0.25, 1, 0.5, 1),
               opacity 0.6s ease,
@@ -706,7 +706,6 @@ body[data-mode="commercial"] .hero-subtitle-commercial {
   clip-path: inset(0 0 0 0%);
   opacity: 1;
   pointer-events: auto;
-  color: #141414;
 }
 
 body[data-mode="commercial"] .hero-subtitle-weddings {
@@ -726,7 +725,6 @@ body[data-mode="weddings"] .hero-subtitle-weddings {
   clip-path: inset(0 0% 0 0);
   opacity: 1;
   pointer-events: auto;
-  color: #2C241E;
 }
 
 /* ==========================================================================
@@ -1810,6 +1808,7 @@ body.subpage::-webkit-scrollbar {
 }
 
 .site-header.solid,
+.site-header.scrolled,
 body.subpage .site-header {
   background-color: var(--nav-bg);
   backdrop-filter: blur(16px);
@@ -1818,13 +1817,24 @@ body.subpage .site-header {
   box-shadow: 0 1px 12px rgba(0, 0, 0, 0.03);
 }
 
+.site-header.solid .nav-item,
 body.subpage .site-header .nav-item {
-  color: var(--text-main);
+  color: var(--text-main) !important;
+  opacity: 0.88;
 }
 
+.site-header.solid .nav-item:hover,
+.site-header.solid .nav-item.active,
+body.subpage .site-header .nav-item:hover,
+body.subpage .site-header .nav-item.active {
+  color: var(--text-main) !important;
+  opacity: 1;
+}
+
+.site-header.solid .nav-sep,
 body.subpage .site-header .nav-sep {
-  color: var(--text-main);
-  opacity: 0.4;
+  color: var(--text-main) !important;
+  opacity: 0.45;
 }
 
 .subpage-container {

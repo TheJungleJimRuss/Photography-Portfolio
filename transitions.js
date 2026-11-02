@@ -432,6 +432,8 @@ class PageWheelRouter {
       if (header) {
         header.classList.add('solid');
         header.setAttribute('data-nav-tone', 'dark');
+        const groups = header.querySelectorAll('.nav-group');
+        groups.forEach(g => g.removeAttribute('data-tone'));
       }
     }
 
