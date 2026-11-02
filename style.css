@@ -10,9 +10,81 @@
   padding: 0;
 }
 
+/* ==========================================================================
+   STYLIZED EDITORIAL FLOATING SCROLLBAR
+   Slim, architectural, floating capsule with 100% transparent track background
+   matching atmospheric themes (Commercial & Weddings)
+   ========================================================================== */
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 64px;
+  background-color: var(--bg-page);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Hide native scrollbars across WebKit / Blink to allow true transparent overlay */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Floating overlay scrollbar container */
+.floating-scrollbar {
+  position: fixed;
+  top: 8px;
+  right: 5px;
+  bottom: 8px;
+  width: 7px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.floating-scrollbar.is-active {
+  opacity: 1;
+}
+
+.floating-scrollbar-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.floating-scrollbar-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 36px;
+  border-radius: 9999px;
+  background-color: var(--scrollbar-thumb);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
+  cursor: grab;
+  transition: background-color 0.4s ease, width 0.15s ease;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.floating-scrollbar-thumb:hover,
+.floating-scrollbar.is-dragging .floating-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb-hover);
+  cursor: grabbing;
+}
+
+html.scrollbar-dragging,
+html.scrollbar-dragging * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  cursor: grabbing !important;
 }
 
 /* ==========================================================================
@@ -29,9 +101,13 @@ html {
   --border-dashed: #a3a3a3;
   --nav-bg: rgba(251, 251, 251, 0.95);
   --nav-border: rgba(215, 215, 215, 0.75);
+  --system-scrollbar-width: 15px;
+  --scrollbar-thumb: rgba(20, 20, 20, 0.25);
+  --scrollbar-thumb-hover: rgba(20, 20, 20, 0.6);
 }
 
 /* COMMERCIAL MODE (Crisp, architectural modern neutrals) */
+html[data-mode="commercial"],
 body[data-mode="commercial"] {
   --bg-page: #fbfbfb;
   --bg-box: #e5e5e5;
@@ -41,9 +117,12 @@ body[data-mode="commercial"] {
   --border-dashed: #a3a3a3;
   --nav-bg: rgba(251, 251, 251, 0.9);
   --nav-border: rgba(215, 215, 215, 0.75);
+  --scrollbar-thumb: rgba(20, 20, 20, 0.25);
+  --scrollbar-thumb-hover: rgba(20, 20, 20, 0.6);
 }
 
 /* WEDDINGS MODE (Warm, romantic alabaster, linen & taupe tones) */
+html[data-mode="weddings"],
 body[data-mode="weddings"] {
   --bg-page: #FAF6F0;           /* Warm creamy alabaster */
   --bg-box: #F0E8DC;            /* Soft warm linen */
@@ -53,6 +132,18 @@ body[data-mode="weddings"] {
   --border-dashed: #C6B59F;     /* Warm bronze dashed */
   --nav-bg: rgba(250, 246, 240, 0.9);
   --nav-border: rgba(226, 215, 199, 0.78);
+  --scrollbar-thumb: rgba(130, 115, 100, 0.35);
+  --scrollbar-thumb-hover: rgba(44, 36, 30, 0.65);
+}
+
+:root:has([data-mode="commercial"]) {
+  --scrollbar-thumb: rgba(20, 20, 20, 0.25);
+  --scrollbar-thumb-hover: rgba(20, 20, 20, 0.6);
+}
+
+:root:has([data-mode="weddings"]) {
+  --scrollbar-thumb: rgba(130, 115, 100, 0.35);
+  --scrollbar-thumb-hover: rgba(44, 36, 30, 0.65);
 }
 
 /* Base Body Styles */
@@ -60,7 +151,7 @@ body {
   background-color: var(--bg-page);
   color: var(--text-main);
   font-family: var(--font-commercial);
-  overflow-x: hidden;
+  overflow-x: clip;
   transition: background-color 0.6s ease, color 0.6s ease;
 }
 
@@ -125,8 +216,9 @@ body[data-mode="commercial"] .mode-text-weddings {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  width: 100%;
+  width: 100vw;
+  max-width: 100vw;
+  box-sizing: border-box;
   height: 52px;
   z-index: 100;
   display: flex;
@@ -172,7 +264,7 @@ body[data-mode="commercial"] .mode-text-weddings {
   text-decoration: none;
   font-family: var(--font-commercial);
   font-size: 0.74rem;
-  font-weight: 550;
+  font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-main);
@@ -194,7 +286,7 @@ body[data-mode="commercial"] .mode-text-weddings {
 .nav-item.nav-link.active {
   color: var(--text-main);
   opacity: 1;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .nav-item.toggle-btn::after,
@@ -1642,8 +1734,64 @@ body[data-mode="weddings"] .strip-tile:has(.mode-photo-weddings.is-loaded)::befo
 }
 
 /* ==========================================================================
+   PAGE WHEEL TRANSITION CONTAINER
+   Smooth 3-station cylindrical rotational transitions between pages
+   ========================================================================== */
+#page-stage {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+}
+
+#page-stage.is-transitioning {
+  overflow: hidden;
+  perspective: 1400px;
+  perspective-origin: 50% 50%;
+  pointer-events: none;
+  user-select: none;
+}
+
+#page-stage.is-transitioning .page-panel {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+html.transition-locked {
+  user-select: none;
+}
+
+.page-panel {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--bg-page);
+}
+
+/* ==========================================================================
    BLANK SUBPAGE LAYOUT (ABOUT & CONTACT)
    ========================================================================== */
+/* Remove scroll bar on about and contact pages */
+html.subpage-active,
+body.subpage {
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html.subpage-active::-webkit-scrollbar,
+body.subpage::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+@media (max-height: 520px), (max-width: 860px) {
+  html.subpage-active,
+  body.subpage {
+    overflow-y: auto;
+  }
+}
+
 .site-header.solid,
 body.subpage .site-header {
   background-color: var(--nav-bg);
@@ -1666,27 +1814,30 @@ body.subpage .site-header .nav-sep {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   padding-top: 52px; /* Header height */
   background-color: var(--bg-page);
+  box-sizing: border-box;
 }
 
 .subpage-main {
   flex: 1;
   width: 100%;
-  max-width: 1320px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: clamp(2.5rem, 5vh, 4.5rem) clamp(1.25rem, 4vw, 3.5rem);
+  padding: clamp(1rem, 2.5vh, 2.5rem) clamp(1.5rem, 4vw, 3.5rem);
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 .subpage-header {
-  margin-bottom: clamp(1.75rem, 3.5vh, 2.75rem);
+  margin-bottom: clamp(0.75rem, 2vh, 1.6rem);
 }
 
 .subpage-title {
   font-family: var(--font-commercial);
-  font-size: clamp(2.25rem, 5.5vw, 4rem);
+  font-size: clamp(2.2rem, 4.2vw, 3.4rem);
   font-weight: 300;
   letter-spacing: -0.02em;
   text-transform: uppercase;
@@ -1695,8 +1846,8 @@ body.subpage .site-header .nav-sep {
 }
 
 .subpage-subtitle {
-  margin-top: 0.65rem;
-  font-size: 0.82rem;
+  margin-top: 0.45rem;
+  font-size: clamp(0.76rem, 1vw, 0.84rem);
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -1731,4 +1882,237 @@ body.subpage .site-header .nav-sep {
   font-size: 0.74rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+/* ==========================================================================
+   SIMPLE SUBPAGE FRAMEWORKS: ABOUT & CONTACT
+   ========================================================================== */
+
+/* Shared Two-Column Grid */
+.about-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(2.5rem, 5vw, 5rem);
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2.5rem, 5vw, 5rem);
+  align-items: start;
+  margin-top: 0.5rem;
+}
+
+/* 1. About Page Framework */
+.about-image-col {
+  height: clamp(380px, 58vh, 580px);
+  width: auto;
+  aspect-ratio: 4/5;
+  max-width: clamp(300px, 35vw, 464px);
+  overflow: hidden;
+  background: var(--bg-box);
+  border: 1px solid var(--border-subtle);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.about-portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 25%;
+  display: block;
+}
+
+.about-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.65rem, 1.4vh, 1.15rem);
+}
+
+.about-heading {
+  font-family: var(--font-weddings);
+  font-size: clamp(1.3rem, 2vw, 1.75rem);
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.about-bio {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.45rem, 1vh, 0.75rem);
+}
+
+.about-bio p {
+  font-size: clamp(0.88rem, 1.1vw, 0.96rem);
+  line-height: 1.62;
+  color: var(--text-main);
+  opacity: 0.88;
+  font-weight: 350;
+}
+
+.about-services {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.35rem, 0.8vh, 0.55rem);
+  padding-top: clamp(0.6rem, 1.2vh, 0.95rem);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.about-section-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.about-services-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem clamp(1rem, 2vw, 1.75rem);
+}
+
+.about-services-list li {
+  font-size: clamp(0.82rem, 1vw, 0.88rem);
+  color: var(--text-main);
+  line-height: 1.45;
+  padding-left: 1.1rem;
+  position: relative;
+}
+
+.about-services-list li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--text-muted);
+}
+
+.about-contact-action {
+  padding-top: clamp(0.35rem, 0.8vh, 0.6rem);
+}
+
+.simple-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.65rem, 1.2vh, 0.8rem) clamp(1.3rem, 2vw, 1.6rem);
+  background: var(--text-main);
+  color: #ffffff;
+  text-decoration: none;
+  font-family: var(--font-commercial);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  transition: background-color 0.25s ease, transform 0.2s ease;
+}
+
+.simple-link-btn:hover {
+  background: #000000;
+  transform: translateY(-1px);
+}
+
+/* 2. Contact Page Framework */
+.contact-info-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.85rem, 1.8vh, 1.5rem);
+}
+
+.contact-heading {
+  font-family: var(--font-weddings);
+  font-size: clamp(1.3rem, 2vw, 1.75rem);
+  font-weight: 400;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.contact-text {
+  font-size: clamp(0.88rem, 1.1vw, 0.96rem);
+  line-height: 1.62;
+  color: var(--text-main);
+  opacity: 0.88;
+  font-weight: 350;
+}
+
+.contact-detail-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.contact-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.contact-value-link {
+  font-size: 1.02rem;
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.contact-value-link:hover {
+  color: var(--text-muted);
+}
+
+.contact-value {
+  font-size: 0.9rem;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.contact-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-top: 0.25rem;
+}
+
+.contact-social-link {
+  font-size: 0.84rem;
+  color: var(--text-main);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  transition: color 0.2s ease;
+}
+
+.contact-social-link:hover {
+  color: var(--text-muted);
+}
+
+.contact-subtext {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 860px) {
+  .about-grid,
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .about-image-col {
+    max-width: 360px;
+    height: auto;
+    aspect-ratio: 4/5;
+  }
+  .about-services-list {
+    grid-template-columns: 1fr;
+  }
 }
