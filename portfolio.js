@@ -181,6 +181,11 @@ export function initPortfolioPage() {
       // so the hero is never blank if this file and style.css get out of step.
       if (heroStack) heroStack.classList.add('curtain-ready');
 
+      // Sync base photo to active body data-mode immediately on mount
+      const activeInitialMode = body.getAttribute('data-mode') || 'commercial';
+      if (photoCommercial) photoCommercial.classList.toggle('is-active', activeInitialMode === 'commercial');
+      if (photoWeddings) photoWeddings.classList.toggle('is-active', activeInitialMode === 'weddings');
+
       let slatLayer = null;          // the live curtain, if one is running
       let slatAnimations = [];       // every animation belonging to that curtain
       let slatSettle = null;         // callback that lands the transition early
