@@ -538,57 +538,40 @@ export function initPortfolioPage() {
       // is ready, a loading skeleton shows instead. Reduced-motion visitors
       // see both as still frames, without drift.
       const ZOOM_PORTION = 0.7;
-      const zoomBackdrop = zoomSection ? zoomSection.querySelector('.zoom-backdrop-video') : null;
-      const zoomVideo = zoomBox ? zoomBox.querySelector('.zoom-video') : null;
-      const zoomVideos = [zoomBackdrop, zoomVideo].filter(Boolean);
-      const zoomVideoPlaying = new Map();
+      const zoomBackdrops = zoomSection ? Array.from(zoomSection.querySelectorAll('.zoom-backdrop-video')) : [];
+      const zoomVideos = zoomBox ? Array.from(zoomBox.querySelectorAll('.zoom-video')) : [];
+      const allZoomMedia = [...zoomBackdrops, ...zoomVideos];
 
-      zoomVideos.forEach(video => {
-        // The puppy's readiness goes on the frame (it drives the frame's
-        // skeleton and title); the cat's goes on the video itself.
-        const target = video === zoomVideo ? zoomBox : video;
+      allZoomMedia.forEach(media => {
+        const target = zoomVideos.includes(media) ? zoomBox : media;
         const markReady = () => target.classList.add('is-video-ready');
-        video.addEventListener('loadeddata', markReady);
-        if (video.readyState >= 2) markReady();
+        if (media.tagName === 'IMG') {
+          if (media.complete && media.naturalWidth > 0) markReady();
+          else media.addEventListener('load', markReady, { once: true });
+        } else {
+          media.addEventListener('loadeddata', markReady);
+          if (media.readyState >= 2) markReady();
+        }
       });
-
-      function setZoomVideoPlaying(video, play) {
-        if (zoomVideoPlaying.get(video) === play) return;
-        zoomVideoPlaying.set(video, play);
-        if (play) video.play().catch(() => {});
-        else video.pause();
-      }
 
       function updateZoomScene(scrollY, zoomProgress, frameProgress) {
         const viewportHeight = window.innerHeight;
         const onScreen = scrollY + viewportHeight > scene.zoomTop
           && scrollY < scene.zoomTop + scene.zoomRange + viewportHeight;
 
-        // Start downloading once the visitor has started scrolling and the
-        // section is within about a screen (so never at page load).
-        if (scrollY > 0 && scrollY + viewportHeight * 2 > scene.zoomTop) {
-          zoomVideos.forEach(video => {
-            if (!video.getAttribute('src')) {
-              video.preload = 'auto';
-              video.src = video.dataset.src;
-            }
-          });
-        }
-
-        const still = motionStill.matches;
-        if (zoomBackdrop) setZoomVideoPlaying(zoomBackdrop, onScreen && !still);
-        if (zoomVideo) setZoomVideoPlaying(zoomVideo, onScreen && frameProgress >= 0.999 && !still);
         if (!onScreen) return;
 
-        // Parallax: both videos drift up as you scroll. Each is scaled 1.12
-        // (6% spare on each side) and drifts at most 5%, so no edges show.
+        const still = motionStill.matches;
+        // Parallax: media elements drift up as you scroll
         const drift = still ? 0 : 0.5 - zoomProgress;
-        if (zoomBackdrop) zoomBackdrop.style.transform = `translate3d(0, ${(drift * 8).toFixed(2)}%, 0) scale(1.12)`;
-        if (zoomVideo) zoomVideo.style.transform = `translate3d(0, ${(drift * 10).toFixed(2)}%, 0) scale(1.12)`;
+        zoomBackdrops.forEach(b => {
+          b.style.transform = `translate3d(0, ${(drift * 8).toFixed(2)}%, 0) scale(1.12)`;
+        });
+        zoomVideos.forEach(v => {
+          v.style.transform = `translate3d(0, ${(drift * 10).toFixed(2)}%, 0) scale(1.12)`;
+        });
 
-        // The title holds while the frame zooms, then eases out over the last
-        // 45% of the zoom, finishing just as the puppy starts to play.
-        // style.css turns --reveal into the title's and the tint's fade.
+        // The title holds while the frame zooms, then eases out over the last 45%
         if (zoomBox) {
           const reveal = smoothstep(clamp01((frameProgress - 0.55) / 0.45)).toFixed(3);
           if (reveal !== scene.zoomReveal) {
