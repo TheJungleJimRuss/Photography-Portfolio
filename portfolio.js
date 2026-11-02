@@ -524,52 +524,54 @@ export function initPortfolioPage() {
         }
       }
 
-      // ZOOM SECTION VIDEOS (Matiaz's parallax): the cat plays behind the
-      // whole section, drifting slowly around the frame. The puppy fills the
-      // frame itself (cropped, never stretched) but holds on a still frame
-      // under a title while the frame zooms; over the last stretch of the zoom
-      // the title eases out, and once the frame is fully zoomed in the puppy
-      // starts playing. Scrolling back pauses it and brings the title back.
-      // The frame zooms over the first ZOOM_PORTION of the section's scroll
-      // and holds at full size for the rest, so the playing video stays on
-      // screen for a while. Both videos (8 MB and 14.7 MB) only start
-      // downloading once the visitor has started scrolling, never at page
-      // load, and only play while the section is on screen. Until each one
-      // is ready, a loading skeleton shows instead. Reduced-motion visitors
-      // see both as still frames, without drift.
+      // ZOOM SECTION VIDEOS: the backdrop video plays behind the whole section,
+      // drifting slowly around the frame. The reel video fills the frame itself
+      // but holds on a still frame under the title while zooming; once fully zoomed in,
+      // it starts playing. Scrolling back pauses it and restores the title.
       const ZOOM_PORTION = 0.7;
-      const zoomBackdrops = zoomSection ? Array.from(zoomSection.querySelectorAll('.zoom-backdrop-video')) : [];
-      const zoomVideos = zoomBox ? Array.from(zoomBox.querySelectorAll('.zoom-video')) : [];
-      const allZoomMedia = [...zoomBackdrops, ...zoomVideos];
+      const zoomBackdrop = zoomSection ? zoomSection.querySelector('.zoom-backdrop-video') : null;
+      const zoomVideo = zoomBox ? zoomBox.querySelector('.zoom-video') : null;
+      const zoomVideos = [zoomBackdrop, zoomVideo].filter(Boolean);
+      const zoomVideoPlaying = new Map();
 
-      allZoomMedia.forEach(media => {
-        const target = zoomVideos.includes(media) ? zoomBox : media;
+      zoomVideos.forEach(video => {
+        const target = video === zoomVideo ? zoomBox : video;
         const markReady = () => target.classList.add('is-video-ready');
-        if (media.tagName === 'IMG') {
-          if (media.complete && media.naturalWidth > 0) markReady();
-          else media.addEventListener('load', markReady, { once: true });
-        } else {
-          media.addEventListener('loadeddata', markReady);
-          if (media.readyState >= 2) markReady();
-        }
+        video.addEventListener('loadeddata', markReady);
+        if (video.readyState >= 2) markReady();
       });
+
+      function setZoomVideoPlaying(video, play) {
+        if (zoomVideoPlaying.get(video) === play) return;
+        zoomVideoPlaying.set(video, play);
+        if (play) video.play().catch(() => {});
+        else video.pause();
+      }
 
       function updateZoomScene(scrollY, zoomProgress, frameProgress) {
         const viewportHeight = window.innerHeight;
         const onScreen = scrollY + viewportHeight > scene.zoomTop
           && scrollY < scene.zoomTop + scene.zoomRange + viewportHeight;
 
-        if (!onScreen) return;
+        // Start downloading once visitor starts scrolling
+        if (scrollY > 0 && scrollY + viewportHeight * 2 > scene.zoomTop) {
+          zoomVideos.forEach(video => {
+            if (!video.getAttribute('src')) {
+              video.preload = 'auto';
+              video.src = video.dataset.src;
+            }
+          });
+        }
 
         const still = motionStill.matches;
-        // Parallax: media elements drift up as you scroll
+        if (zoomBackdrop) setZoomVideoPlaying(zoomBackdrop, onScreen && !still);
+        if (zoomVideo) setZoomVideoPlaying(zoomVideo, onScreen && frameProgress >= 0.999 && !still);
+        if (!onScreen) return;
+
+        // Parallax drift
         const drift = still ? 0 : 0.5 - zoomProgress;
-        zoomBackdrops.forEach(b => {
-          b.style.transform = `translate3d(0, ${(drift * 8).toFixed(2)}%, 0) scale(1.12)`;
-        });
-        zoomVideos.forEach(v => {
-          v.style.transform = `translate3d(0, ${(drift * 10).toFixed(2)}%, 0) scale(1.12)`;
-        });
+        if (zoomBackdrop) zoomBackdrop.style.transform = `translate3d(0, ${(drift * 8).toFixed(2)}%, 0) scale(1.12)`;
+        if (zoomVideo) zoomVideo.style.transform = `translate3d(0, ${(drift * 10).toFixed(2)}%, 0) scale(1.12)`;
 
         // The title holds while the frame zooms, then eases out over the last 45%
         if (zoomBox) {
