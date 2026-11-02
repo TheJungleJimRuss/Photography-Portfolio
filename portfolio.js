@@ -645,42 +645,42 @@ export function initPortfolioPage() {
           }
         }
 
-        // Print stack section
-        if (stackCard && stackSteps.length) {
+        // Print stack section: discrete transitions ensure photos exit completely
+        // and never freeze or hover halfway through mid-flight.
+        if (stackCard && stackPrints.length) {
+          const stackCount = stackPrints.length;
           const progress = clamp01((scrollY - scene.stackTop) / scene.stackRange);
-          const step = stackSteps.find(s => progress <= s.end) || stackSteps[stackSteps.length - 1];
-          const still = motionStill.matches;
-          let lift = step.kind === 'lift' ? clamp01((progress - step.start) / (step.end - step.start)) : 0;
-          if (still) lift = lift < 0.5 ? 0 : 1; // reduced motion: swap, don't fly
-
-          stackPrints.forEach((print, k) => {
-            const pose = printPose(k, step.print, lift);
-            if (pose !== scene.stackPoses[k]) {
-              scene.stackPoses[k] = pose;
-              print.style.transform = pose;
-              print.style.visibility = k < step.print ? 'hidden' : '';
-            }
-          });
-
-          // The text and counter switch halfway through a lift, while the text
-          // is fully faded: out over the first 45%, back in over the last 45%.
-          const showing = step.kind === 'lift' && lift >= 0.5 ? step.print + 1 : step.print;
-          let copy = 1;
-          if (step.kind === 'lift' && !still) {
-            copy = lift < 0.5 ? 1 - smoothstep(clamp01(lift / 0.45)) : smoothstep(clamp01((lift - 0.55) / 0.45));
-          }
+          // Calculate discrete active card based on scroll progress
+          const showing = Math.min(stackCount - 1, Math.floor(progress * stackCount));
 
           if (showing !== scene.stackShowing) {
             scene.stackShowing = showing;
-            stackTexts.forEach((el, i) => el.classList.toggle('is-current', i === showing));
-            stackPrints.forEach((el, i) => el.classList.toggle('is-top', i === showing));
-            if (stackCounter) stackCounter.textContent = String(showing + 1).padStart(2, '0');
-          }
 
-          const copyKey = copy.toFixed(3);
-          if (copyKey !== scene.stackCopy) {
-            scene.stackCopy = copyKey;
-            stackCard.style.setProperty('--copy', copyKey);
+            stackPrints.forEach((print, k) => {
+              if (k < showing) {
+                // Lifted away completely off-screen
+                print.style.transform = `translate3d(${LIFT_SWING}px, ${(-scene.stackExit).toFixed(1)}px, 0) rotate(${LIFT_TILT}deg) scale(1.04)`;
+                print.style.opacity = '0';
+                print.style.pointerEvents = 'none';
+              } else if (k === showing) {
+                // Cleanly resting on top of the pile
+                print.style.transform = 'translate3d(0, 0, 0) rotate(0deg) scale(1)';
+                print.style.opacity = '1';
+                print.style.pointerEvents = 'auto';
+              } else {
+                // Tucked in the pile underneath
+                const tilt = PILE_TILT[k % PILE_TILT.length];
+                const [nx, ny] = PILE_NUDGE[k % PILE_NUDGE.length];
+                print.style.transform = `translate3d(${nx}px, ${ny}px, 0) rotate(${tilt}deg) scale(${PILE_SCALE})`;
+                print.style.opacity = '1';
+                print.style.pointerEvents = 'none';
+              }
+
+              print.classList.toggle('is-top', k === showing);
+            });
+
+            stackTexts.forEach((el, i) => el.classList.toggle('is-current', i === showing));
+            if (stackCounter) stackCounter.textContent = String(showing + 1).padStart(2, '0');
           }
 
           // Skeleton until the photo on show (this print, this mode) has loaded.
@@ -701,6 +701,68 @@ export function initPortfolioPage() {
       }
 
       window.addEventListener('scroll', onScroll, { passive: true, signal });
+
+      // GESTURE-STEPPED PRINT STACK: When scrolling inside the pinned stack section,
+      // each scroll flick triggers a complete, clean photo exit and lands the next
+      // card flat on the pile — eliminating any half-way frozen or hovering states.
+      if (stackSection) {
+        let stackWheelLock = false;
+        stackSection.addEventListener('wheel', (e) => {
+          const scrollY = window.scrollY;
+          const isPinned = scrollY >= scene.stackTop - 10 && scrollY <= scene.stackTop + scene.stackRange + 10;
+          if (!isPinned || stackWheelLock) return;
+
+          const stackCount = stackPrints.length;
+          if (e.deltaY > 20 && scene.stackShowing < stackCount - 1) {
+            e.preventDefault();
+            stackWheelLock = true;
+            const nextIndex = scene.stackShowing + 1;
+            const targetScroll = scene.stackTop + (nextIndex / (stackCount - 1)) * scene.stackRange;
+            window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+            setTimeout(() => { stackWheelLock = false; }, 420);
+          } else if (e.deltaY < -20 && scene.stackShowing > 0) {
+            e.preventDefault();
+            stackWheelLock = true;
+            const prevIndex = scene.stackShowing - 1;
+            const targetScroll = scene.stackTop + (prevIndex / (stackCount - 1)) * scene.stackRange;
+            window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+            setTimeout(() => { stackWheelLock = false; }, 420);
+          }
+        }, { passive: false, signal });
+
+        let stackTouchStartY = 0;
+        stackSection.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) stackTouchStartY = e.touches[0].clientY;
+        }, { passive: true, signal });
+
+        stackSection.addEventListener('touchmove', (e) => {
+          if (stackWheelLock || e.touches.length !== 1) return;
+          const scrollY = window.scrollY;
+          const isPinned = scrollY >= scene.stackTop - 10 && scrollY <= scene.stackTop + scene.stackRange + 10;
+          if (!isPinned) return;
+
+          const deltaY = stackTouchStartY - e.touches[0].clientY;
+          const stackCount = stackPrints.length;
+
+          if (deltaY > 35 && scene.stackShowing < stackCount - 1) {
+            e.preventDefault();
+            stackWheelLock = true;
+            stackTouchStartY = e.touches[0].clientY;
+            const nextIndex = scene.stackShowing + 1;
+            const targetScroll = scene.stackTop + (nextIndex / (stackCount - 1)) * scene.stackRange;
+            window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+            setTimeout(() => { stackWheelLock = false; }, 420);
+          } else if (deltaY < -35 && scene.stackShowing > 0) {
+            e.preventDefault();
+            stackWheelLock = true;
+            stackTouchStartY = e.touches[0].clientY;
+            const prevIndex = scene.stackShowing - 1;
+            const targetScroll = scene.stackTop + (prevIndex / (stackCount - 1)) * scene.stackRange;
+            window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+            setTimeout(() => { stackWheelLock = false; }, 420);
+          }
+        }, { passive: false, signal });
+      }
       window.addEventListener('resize', () => {
         measureScrollScenes();
         renderScrollScenes();

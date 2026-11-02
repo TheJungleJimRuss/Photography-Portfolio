@@ -1120,8 +1120,8 @@ body[data-mode="commercial"] .image-box .mode-crossfade-stack > * {
   border-radius: 2px;
   box-shadow: 0 22px 44px -18px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.12);
   transform-origin: 50% 60%;
-  will-change: transform;
-  transition: background-color 0.6s ease;
+  will-change: transform, opacity;
+  transition: transform 0.48s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease, background-color 0.6s ease;
 }
 
 body[data-mode="weddings"] .stack-print {
@@ -1189,15 +1189,15 @@ body[data-mode="weddings"] .stack-print .mode-photo-commercial {
 .stack-text {
   grid-area: text;
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(12px);
   pointer-events: none;
+  transition: opacity 0.38s ease, transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* The text changes and fades while the new print comes in: it fades out as
-   the top print is lifted and back in as the next one settles. */
+/* The text changes and fades cleanly when the active print changes */
 .stack-text.is-current {
-  opacity: var(--copy);
-  transform: translateY(calc((1 - var(--copy)) * 10px));
+  opacity: 1;
+  transform: translateY(0);
   pointer-events: auto;
 }
 
