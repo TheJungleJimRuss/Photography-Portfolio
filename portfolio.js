@@ -703,30 +703,36 @@ export function initPortfolioPage() {
       window.addEventListener('scroll', onScroll, { passive: true, signal });
 
       // GESTURE-STEPPED PRINT STACK: When scrolling inside the pinned stack section,
-      // each scroll flick triggers a complete, clean photo exit and lands the next
-      // card flat on the pile — eliminating any half-way frozen or hovering states.
+      // each scroll flick triggers a single, complete photo exit with a deliberate gap
+      // and momentum barrier so you never accidentally skip past multiple photos.
       if (stackSection) {
         let stackWheelLock = false;
         stackSection.addEventListener('wheel', (e) => {
           const scrollY = window.scrollY;
           const isPinned = scrollY >= scene.stackTop - 10 && scrollY <= scene.stackTop + scene.stackRange + 10;
-          if (!isPinned || stackWheelLock) return;
+          if (!isPinned) return;
+
+          // Consume residual scroll momentum during the transition lockout so it cannot jump a second photo
+          if (stackWheelLock) {
+            e.preventDefault();
+            return;
+          }
 
           const stackCount = stackPrints.length;
-          if (e.deltaY > 20 && scene.stackShowing < stackCount - 1) {
+          if (e.deltaY > 38 && scene.stackShowing < stackCount - 1) {
             e.preventDefault();
             stackWheelLock = true;
             const nextIndex = scene.stackShowing + 1;
             const targetScroll = scene.stackTop + (nextIndex / (stackCount - 1)) * scene.stackRange;
             window.scrollTo({ top: targetScroll, behavior: 'smooth' });
-            setTimeout(() => { stackWheelLock = false; }, 420);
-          } else if (e.deltaY < -20 && scene.stackShowing > 0) {
+            setTimeout(() => { stackWheelLock = false; }, 720);
+          } else if (e.deltaY < -38 && scene.stackShowing > 0) {
             e.preventDefault();
             stackWheelLock = true;
             const prevIndex = scene.stackShowing - 1;
             const targetScroll = scene.stackTop + (prevIndex / (stackCount - 1)) * scene.stackRange;
             window.scrollTo({ top: targetScroll, behavior: 'smooth' });
-            setTimeout(() => { stackWheelLock = false; }, 420);
+            setTimeout(() => { stackWheelLock = false; }, 720);
           }
         }, { passive: false, signal });
 
@@ -736,30 +742,34 @@ export function initPortfolioPage() {
         }, { passive: true, signal });
 
         stackSection.addEventListener('touchmove', (e) => {
-          if (stackWheelLock || e.touches.length !== 1) return;
           const scrollY = window.scrollY;
           const isPinned = scrollY >= scene.stackTop - 10 && scrollY <= scene.stackTop + scene.stackRange + 10;
           if (!isPinned) return;
 
+          if (stackWheelLock || e.touches.length !== 1) {
+            if (stackWheelLock) e.preventDefault();
+            return;
+          }
+
           const deltaY = stackTouchStartY - e.touches[0].clientY;
           const stackCount = stackPrints.length;
 
-          if (deltaY > 35 && scene.stackShowing < stackCount - 1) {
+          if (deltaY > 50 && scene.stackShowing < stackCount - 1) {
             e.preventDefault();
             stackWheelLock = true;
             stackTouchStartY = e.touches[0].clientY;
             const nextIndex = scene.stackShowing + 1;
             const targetScroll = scene.stackTop + (nextIndex / (stackCount - 1)) * scene.stackRange;
             window.scrollTo({ top: targetScroll, behavior: 'smooth' });
-            setTimeout(() => { stackWheelLock = false; }, 420);
-          } else if (deltaY < -35 && scene.stackShowing > 0) {
+            setTimeout(() => { stackWheelLock = false; }, 720);
+          } else if (deltaY < -50 && scene.stackShowing > 0) {
             e.preventDefault();
             stackWheelLock = true;
             stackTouchStartY = e.touches[0].clientY;
             const prevIndex = scene.stackShowing - 1;
             const targetScroll = scene.stackTop + (prevIndex / (stackCount - 1)) * scene.stackRange;
             window.scrollTo({ top: targetScroll, behavior: 'smooth' });
-            setTimeout(() => { stackWheelLock = false; }, 420);
+            setTimeout(() => { stackWheelLock = false; }, 720);
           }
         }, { passive: false, signal });
       }

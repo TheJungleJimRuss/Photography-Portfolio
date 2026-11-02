@@ -4,23 +4,21 @@
 - **Project Name**: PhotographyPortfolio (Glow Creative Co.)
 - **Repository**: `https://github.com/TheJungleJimRuss/Photography-Portfolio.git`
 - **Target Platform & Engine**: Vite v8, Vanilla ES Modules, CSS3
-- **Status**: Merged & Finished Local Production Build
-- **Core Concept**: Photography portfolio showcasing Commercial & Weddings photography, featuring a 3-station rotational wheel page transition ([About] <-> [Portfolio] <-> [Contact]), adaptive luminance navbar detection, horizontal darkroom develop gallery, interactive lightbox, and continuous sliding film strips.
+- **Status**: Live on `http://localhost:5173/`
+- **Core Concept**: Photography portfolio showcasing Commercial & Weddings photography, featuring a 3-station rotational wheel page transition ([About] <-> [Portfolio] <-> [Contact]), adaptive luminance navbar detection, horizontal darkroom develop gallery, interactive lightbox, continuous sliding film strips, and discrete step-flip print stack.
 
 ## 2. System Architecture & Components
 - **Modular Scripts**:
   - `transitions.js`: 3-station rotational wheel page router managing dynamic DOM replacement and directional sliding transitions between `index.html`, `about.html`, and `contact.html`.
-  - `portfolio.js`: Lifecycle-managed (`initPortfolioPage` / `destroyPortfolioPage`) dual-world Commercial vs Weddings mode toggle, slat curtain transitions, adaptive navbar contrast sampling, video playback controls, scroll scenes, and lightbox.
+  - `portfolio.js`: Dual-world mode toggle, slat curtain transitions, adaptive navbar contrast sampling, video playback controls, scroll scenes, lightbox, and discrete gesture-stepped print stack transitions.
   - `scrollbar.js`: Transparent floating custom scrollbar.
-- **Build System**:
-  - `vite.config.js`: Multi-page rollup configuration targeting `index.html`, `about.html`, and `contact.html` with automated root media asset bundling (`copyRootMedia` plugin for `CATCAT.mp4` and `Puppy.mp4`).
+- **Print Stack Discrete Flip Interaction**:
+  - `.stack-print` configured with `transition: transform 0.48s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease;`
+  - Replaced continuous pixel-scrubbing with discrete active card states: cards animate completely off-screen (`opacity: 0`, full exit) and land flat on the pile (`opacity: 1`, `scale(1)`), eliminating any midway hovering or half-finished animations.
+  - Added wheel/touch gesture interceptors on `.stack-section` to cleanly advance cards on user scroll gestures.
 
 ## 3. Active Roadmap & Milestones
-- [x] Cloned and fetched all branches from GitHub (`TheJungleJimRuss/Photography-Portfolio`)
-- [x] Merged feature/fix branch (`fix/about-contact`) into `main`
-- [x] Resolved merge conflict in `index.html` by integrating the modular transitions router and preserving all recent filmstrip & video markup from `main`
-- [x] Cleaned up legacy unzipped directory artifacts (`Completed VSCODE/` and `images/Completed VSCODE/`, saving 51.5 MB)
-- [x] Verified zero-warning production build with `npm run build`
-
-## 4. Architectural Decisions & Conventions Log
-- `2026-11-02`: Reconciled divergence between `main` (recent PR #19 film strips & video improvements) and `fix/about-contact` (wheel transitions & redesign of About/Contact). Preserved modular JS architecture while ensuring complete HTML structure and media bundling.
+- [x] Merged feature/fix branch (`fix/about-contact`) into `main` and resolved merge conflicts
+- [x] Vite development server running on `http://localhost:5173/`
+- [x] Cleaned up 51.5 MB of redundant unzipped archives
+- [x] Implemented discrete, complete photo exits for the Print Stack to prevent stuck/half-way states

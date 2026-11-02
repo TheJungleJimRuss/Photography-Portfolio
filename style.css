@@ -1087,8 +1087,8 @@ body[data-mode="commercial"] .image-box .mode-crossfade-stack > * {
    ========================================================================== */
 .stack-section {
   position: relative;
-  /* One screen to pin the section, plus ~70vh of scrolling per print (7). */
-  height: calc(100vh + 7 * 70vh);
+  /* One screen to pin the section, plus 120vh of deliberate scroll distance per print (7). */
+  height: calc(100vh + 7 * 120vh);
   border-bottom: 2px solid var(--border-subtle);
   transition: border-color 0.6s ease;
 }
