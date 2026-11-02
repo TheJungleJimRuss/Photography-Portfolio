@@ -346,13 +346,17 @@ body[data-mode="commercial"] .mode-text-weddings {
 }
 
 .site-header:not(.scrolled):not(.solid) .nav-group[data-tone="light"] .nav-item.toggle-btn.active,
-.site-header:not(.scrolled):not(.solid)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item.toggle-btn.active {
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item.toggle-btn.active,
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="light"] .nav-item.nav-link.active,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item.nav-link.active {
   color: #ffffff;
   opacity: 1;
 }
 
 .site-header:not(.scrolled):not(.solid) .nav-group[data-tone="light"] .nav-item.toggle-btn::after,
-.site-header:not(.scrolled):not(.solid)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item.toggle-btn::after {
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item.toggle-btn::after,
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="light"] .nav-item.nav-link::after,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="light"] .nav-group:not([data-tone]) .nav-item.nav-link::after {
   background-color: #ffffff;
 }
 
@@ -375,13 +379,17 @@ body[data-mode="commercial"] .mode-text-weddings {
 }
 
 .site-header:not(.scrolled):not(.solid) .nav-group[data-tone="dark"] .nav-item.toggle-btn.active,
-.site-header:not(.scrolled):not(.solid)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item.toggle-btn.active {
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item.toggle-btn.active,
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="dark"] .nav-item.nav-link.active,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item.nav-link.active {
   color: #141414;
   opacity: 1;
 }
 
 .site-header:not(.scrolled):not(.solid) .nav-group[data-tone="dark"] .nav-item.toggle-btn::after,
-.site-header:not(.scrolled):not(.solid)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item.toggle-btn::after {
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item.toggle-btn::after,
+.site-header:not(.scrolled):not(.solid) .nav-group[data-tone="dark"] .nav-item.nav-link::after,
+.site-header:not(.scrolled):not(.solid)[data-nav-tone="dark"] .nav-group:not([data-tone]) .nav-item.nav-link::after {
   background-color: #141414;
 }
 
@@ -1828,6 +1836,12 @@ body.subpage .site-header .nav-item {
 body.subpage .site-header .nav-item:hover,
 body.subpage .site-header .nav-item.active {
   color: var(--text-main) !important;
+  opacity: 1;
+}
+
+.site-header.solid .nav-item.active::after,
+body.subpage .site-header .nav-item.active::after {
+  background-color: var(--text-main) !important;
   opacity: 1;
 }
 
