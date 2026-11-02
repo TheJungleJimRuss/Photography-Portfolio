@@ -452,8 +452,7 @@ body[data-mode="commercial"] .mode-text-weddings {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-bottom: 2px solid var(--border-subtle);
-  transition: border-color 0.6s ease;
+  border-bottom: none;
 }
 
 /* Space for background image behind the title */
